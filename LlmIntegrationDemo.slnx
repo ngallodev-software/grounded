@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="LlmIntegrationDemo.Api/LlmIntegrationDemo.Api.csproj" />
+  <Project Path="LlmIntegrationDemo.Tests/LlmIntegrationDemo.Tests.csproj" />
+</Solution>
