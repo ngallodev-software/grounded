@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
-using LlmIntegrationDemo.Api.Models;
+using Grounded.Api.Models;
 
-namespace LlmIntegrationDemo.Api.Services;
+namespace Grounded.Api.Services;
 
 public sealed class SqlSafetyGuard
 {

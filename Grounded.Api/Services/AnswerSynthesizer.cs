@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using LlmIntegrationDemo.Api.Models;
+using Grounded.Api.Models;
 
-namespace LlmIntegrationDemo.Api.Services;
+namespace Grounded.Api.Services;
 
 public sealed class AnswerSynthesizer
 {

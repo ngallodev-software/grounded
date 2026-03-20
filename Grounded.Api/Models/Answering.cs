@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LlmIntegrationDemo.Api.Models;
+namespace Grounded.Api.Models;
 
 public sealed record AnswerDto(
     string Summary,

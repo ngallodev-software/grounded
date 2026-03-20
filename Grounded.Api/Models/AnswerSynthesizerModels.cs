@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace LlmIntegrationDemo.Api.Models;
+namespace Grounded.Api.Models;
 
 public sealed record AnswerSynthesizerRequest(
     string UserQuestion,

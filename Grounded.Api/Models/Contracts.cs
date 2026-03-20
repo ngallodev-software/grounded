@@ -1,4 +1,4 @@
-namespace LlmIntegrationDemo.Api.Models;
+namespace Grounded.Api.Models;
 
 public sealed record QueryPlan(
     string Version,

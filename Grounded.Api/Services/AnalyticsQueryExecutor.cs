@@ -1,9 +1,9 @@
 using System.Data;
 using System.Diagnostics;
-using LlmIntegrationDemo.Api.Models;
+using Grounded.Api.Models;
 using Npgsql;
 
-namespace LlmIntegrationDemo.Api.Services;
+namespace Grounded.Api.Services;
 
 public interface INpgsqlConnectionFactory
 {

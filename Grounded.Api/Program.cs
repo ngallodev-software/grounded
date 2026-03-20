@@ -1,4 +1,4 @@
-using LlmIntegrationDemo.Api.Services;
+using Grounded.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

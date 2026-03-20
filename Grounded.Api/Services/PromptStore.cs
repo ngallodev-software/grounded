@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace LlmIntegrationDemo.Api.Services;
+namespace Grounded.Api.Services;
 
 public sealed class PromptStore
 {

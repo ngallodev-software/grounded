@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace LlmIntegrationDemo.Api.Services;
+namespace Grounded.Api.Services;
 
 internal enum FilterTarget
 {

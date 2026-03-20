@@ -1,13 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
-using LlmIntegrationDemo.Api.Models;
-using LlmIntegrationDemo.Api.Services;
+using Grounded.Api.Models;
+using Grounded.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace LlmIntegrationDemo.Tests;
+namespace Grounded.Tests;
 
 public sealed class AnalyticsPhase2Tests
 {

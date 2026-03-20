@@ -1,8 +1,8 @@
-using LlmIntegrationDemo.Api.Models;
-using LlmIntegrationDemo.Api.Services;
+using Grounded.Api.Models;
+using Grounded.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LlmIntegrationDemo.Api.Controllers;
+namespace Grounded.Api.Controllers;
 
 [ApiController]
 [Route("analytics")]
