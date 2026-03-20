@@ -21,48 +21,59 @@ public sealed record LlmAnswerResponse(
 
 public sealed class DeterministicLlmGateway : ILlmGateway
 {
-    private readonly DeterministicAnswerSynthesizerEngine _engine;
+    private readonly ModelInvokerResolver _modelInvokerResolver;
     private readonly JsonSerializerOptions _serializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false
     };
 
-    public DeterministicLlmGateway(DeterministicAnswerSynthesizerEngine engine)
+    public DeterministicLlmGateway(ModelInvokerResolver modelInvokerResolver)
     {
-        _engine = engine;
+        _modelInvokerResolver = modelInvokerResolver;
     }
 
-    public Task<LlmAnswerResponse> SendAnswerRequestAsync(PromptDefinition prompt, AnswerSynthesizerRequest request, CancellationToken cancellationToken)
+    public async Task<LlmAnswerResponse> SendAnswerRequestAsync(PromptDefinition prompt, AnswerSynthesizerRequest request, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        var answerOutput = _engine.Build(request);
-        var payload = JsonSerializer.Serialize(answerOutput, _serializerOptions);
-        var now = DateTimeOffset.UtcNow;
-        var tokensIn = Math.Max(1, request.UserQuestion.Length + request.Rows.Count + request.Columns.Count);
-        var tokensOut = Math.Max(1, payload.Length / 4);
-        var response = new LlmAnswerResponse(
-            payload,
-            ModelName,
-            tokensIn,
-            tokensOut,
-            now,
-            now);
+        var result = await _modelInvokerResolver.GetRequired("deterministic").InvokeAsync(
+            new ModelRequest(
+                "deterministic",
+                prompt.Content,
+                JsonSerializer.Serialize(request, _serializerOptions),
+                prompt.PromptKey,
+                prompt.Version,
+                prompt.Checksum,
+                string.Empty,
+                string.Empty),
+            cancellationToken);
+        if (!result.IsSuccess || result.Response is null)
+        {
+            throw new InvalidOperationException(result.Failure?.Message ?? "deterministic invocation failed");
+        }
 
-        return Task.FromResult(response);
+        return new LlmAnswerResponse(
+            result.Response.Content,
+            result.Response.ModelName,
+            result.Response.Usage.TokensIn,
+            result.Response.Usage.TokensOut,
+            result.Response.RequestedAt,
+            result.Response.RespondedAt);
     }
-
-    private const string ModelName = "deterministic-local";
 }
 
 public interface ILlmPlannerGateway
 {
-    Task<QueryPlan> PlanFromQuestionAsync(string question, CancellationToken cancellationToken);
+    Task<PlannerGatewayResult> PlanFromQuestionAsync(string question, ConversationStateSnapshot? conversationState, CancellationToken cancellationToken);
 }
 
 public sealed class DeterministicLlmPlannerGateway : ILlmPlannerGateway
 {
-    public Task<QueryPlan> PlanFromQuestionAsync(string question, CancellationToken cancellationToken)
+    private readonly JsonSerializerOptions _serializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    public Task<PlannerGatewayResult> PlanFromQuestionAsync(string question, ConversationStateSnapshot? conversationState, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var plan = new QueryPlan(
@@ -76,6 +87,45 @@ public sealed class DeterministicLlmPlannerGateway : ILlmPlannerGateway
             Sort: new SortSpec("metric", "desc"),
             Limit: null,
             UsePriorState: false);
-        return Task.FromResult(plan);
+        var now = DateTimeOffset.UtcNow;
+        return Task.FromResult(new PlannerGatewayResult(
+            true,
+            plan,
+            new PlannerTrace(
+                "planner",
+                "v1",
+                "deterministic",
+                "deterministic",
+                "deterministic-local",
+                now,
+                now,
+                0,
+                Math.Max(1, question.Length / 4),
+                1,
+                true,
+                false,
+                false,
+                FailureCategories.None,
+                null),
+            new PersistedPlannerAttempt(
+                "planner",
+                "v1",
+                "deterministic",
+                "deterministic",
+                "deterministic-local",
+                now,
+                now,
+                0,
+                Math.Max(1, question.Length / 4),
+                1,
+                true,
+                false,
+                false,
+                FailureCategories.None,
+                null,
+                null,
+                null,
+                JsonSerializer.Serialize(plan, _serializerOptions)),
+            null));
     }
 }

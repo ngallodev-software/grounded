@@ -1,0 +1,62 @@
+[
+  {
+    "invokerName": "replay",
+    "promptKey": "planner",
+    "matchText": "total revenue last month",
+    "responseContent": "{\"version\":\"1.0\",\"questionType\":\"aggregate\",\"dimension\":null,\"filters\":[],\"metric\":\"revenue\",\"timeRange\":{\"preset\":\"last_month\",\"startDate\":null,\"endDate\":null},\"timeGrain\":null,\"sort\":{\"by\":\"metric\",\"direction\":\"desc\"},\"limit\":null,\"usePriorState\":false}",
+    "provider": "replay",
+    "modelName": "planner-replay-v1",
+    "tokensIn": 120,
+    "tokensOut": 40
+  },
+  {
+    "invokerName": "replay",
+    "promptKey": "planner",
+    "matchText": "Top 5 products by units sold this year",
+    "responseContent": "{\"version\":\"1.0\",\"questionType\":\"ranking\",\"dimension\":\"product_name\",\"filters\":[],\"metric\":\"units_sold\",\"timeRange\":{\"preset\":\"year_to_date\",\"startDate\":null,\"endDate\":null},\"timeGrain\":null,\"sort\":{\"by\":\"metric\",\"direction\":\"desc\"},\"limit\":5,\"usePriorState\":false}",
+    "provider": "replay",
+    "modelName": "planner-replay-v1",
+    "tokensIn": 125,
+    "tokensOut": 44
+  },
+  {
+    "invokerName": "replay",
+    "promptKey": "planner",
+    "matchText": "Monthly revenue for the last 6 months",
+    "responseContent": "{\"version\":\"1.0\",\"questionType\":\"time_series\",\"dimension\":null,\"filters\":[],\"metric\":\"revenue\",\"timeRange\":{\"preset\":\"last_6_months\",\"startDate\":null,\"endDate\":null},\"timeGrain\":\"month\",\"sort\":{\"by\":\"metric\",\"direction\":\"desc\"},\"limit\":null,\"usePriorState\":false}",
+    "provider": "replay",
+    "modelName": "planner-replay-v1",
+    "tokensIn": 122,
+    "tokensOut": 42
+  },
+  {
+    "invokerName": "replay",
+    "promptKey": "planner",
+    "matchText": "Write me the SQL",
+    "responseContent": "{\"version\":\"1.0\",\"questionType\":\"aggregate\",\"dimension\":\"customer_region\",\"filters\":[],\"metric\":\"gross_margin\",\"timeRange\":{\"preset\":\"last_month\",\"startDate\":null,\"endDate\":null},\"timeGrain\":null,\"sort\":{\"by\":\"metric\",\"direction\":\"desc\"},\"limit\":null,\"usePriorState\":false}",
+    "provider": "replay",
+    "modelName": "planner-replay-v1",
+    "tokensIn": 110,
+    "tokensOut": 41
+  },
+  {
+    "invokerName": "replay",
+    "promptKey": "answer-synthesizer",
+    "matchText": "\"metric\":123",
+    "responseContent": "{\"summary\":\"Revenue was 123.\",\"keyPoints\":[\"123 is the recorded metric value.\"],\"tableIncluded\":false}",
+    "provider": "replay",
+    "modelName": "answer-replay-v1",
+    "tokensIn": 80,
+    "tokensOut": 30
+  },
+  {
+    "invokerName": "replay",
+    "promptKey": "answer-synthesizer",
+    "matchText": "\"metric\":500",
+    "responseContent": "{\"summary\":\"Revenue was 500.\",\"keyPoints\":[\"500 is the recorded metric value.\"],\"tableIncluded\":false}",
+    "provider": "replay",
+    "modelName": "answer-replay-v1",
+    "tokensIn": 80,
+    "tokensOut": 30
+  }
+]

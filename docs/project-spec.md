@@ -1040,6 +1040,7 @@ Build:
 - result comparison
 - eval result storage
 - before/after prompt comparison
+- note: post-Stage-5 operational controls should also be planned here or immediately after this stage
 
 **Exit criteria**
 - you can run benchmark suite locally
@@ -1049,9 +1050,18 @@ Build:
 
 Build:
 - good request/trace logging
+- trace IDs / correlation IDs across logs and traces
+- audit logging for who asked what
+- server-side rate limiting
+- request size limits
+- token/request caps
+- feature flag to disable live model calls quickly
+- API auth between frontend and backend if origins are split
 - sample Postman collection or Swagger examples
 - short demo script
 - README with architecture and known limitations
+
+These operational controls were added after Stage 5 and belong to the post-Stage-5 hardening/demo-readiness work rather than the earlier model-integration stages.
 
 **Exit criteria**
 - a stranger can run it locally

@@ -208,6 +208,20 @@ public sealed class SqlFragmentRegistry
             ["quarter"] = "quarter"
         });
 
+    public IReadOnlyDictionary<string, IReadOnlySet<string>?> GetPlannerFilterValueAllowList() =>
+        new ReadOnlyDictionary<string, IReadOnlySet<string>?>(new Dictionary<string, IReadOnlySet<string>?>(StringComparer.Ordinal)
+        {
+            ["customer_region"] = RegionValues,
+            ["customer_segment"] = SegmentValues,
+            ["acquisition_channel"] = AcquisitionValues,
+            ["product_category"] = ProductCategoryValues,
+            ["product_subcategory"] = null,
+            ["product_name"] = null,
+            ["sales_channel"] = SalesChannelValues,
+            ["shipping_region"] = RegionValues,
+            ["customer_type"] = CustomerTypeValues
+        });
+
     internal MetricSqlSpec GetMetric(string metric) => _metrics[metric];
 
     internal DimensionSqlSpec GetDimension(string dimension) => _dimensions[dimension];

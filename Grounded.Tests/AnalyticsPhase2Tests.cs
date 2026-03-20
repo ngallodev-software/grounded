@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Grounded.Tests;
 
@@ -149,6 +150,34 @@ public sealed class AnalyticsPhase2Tests
     }
 
     [Fact]
+    public void UnsupportedFilterValue_IsRejected()
+    {
+        var result = _validator.Validate(CreatePlan(
+            filters: [new("sales_channel", "eq", ["Retail"])]));
+
+        Assert.Contains(result.Errors, error => error.Code == "invalid_filter_values");
+    }
+
+    [Fact]
+    public void ValidFilteredGroupedBreakdown_IsAcceptedAndCompilesFilterPredicate()
+    {
+        var plan = CreatePlan(
+            questionType: "grouped_breakdown",
+            metric: "revenue",
+            dimension: "product_category",
+            filters: [new("sales_channel", "eq", ["Web"])],
+            sort: new("metric", "desc"));
+
+        var validation = _validator.Validate(plan);
+        var compiled = _compiler.Compile(plan, _timeRangeResolver.Resolve(plan.TimeRange));
+
+        Assert.True(validation.IsValid);
+        Assert.Contains("o.sales_channel = @p", compiled.Sql);
+        Assert.Contains("GROUP BY p.category", compiled.Sql);
+        Assert.Contains("ORDER BY metric DESC, dimension ASC", compiled.Sql);
+    }
+
+    [Fact]
     public void GroupedBreakdownSortedByDimension_CompilesAlphabeticalOrdering()
     {
         var plan = CreatePlan(
@@ -209,6 +238,9 @@ public sealed class AnalyticsPhase2Tests
         Assert.NotNull(body);
         Assert.Equal("error", body!.Status);
         Assert.Contains(body.Errors!, error => error.Code == "unsupported_question_type");
+        Assert.Equal(FailureCategories.UnsupportedRequest, body.FailureCategory);
+        Assert.NotNull(body.Trace);
+        Assert.Equal("not_requested", body.Trace!.PlannerStatus);
     }
 
     private static QueryPlan CreatePlan(
@@ -262,8 +294,15 @@ public sealed class AnalyticsPhase2Tests
             {
                 services.RemoveAll<IUtcClock>();
                 services.RemoveAll<IAnalyticsQueryExecutor>();
+                services.RemoveAll<ITraceRepository>();
+                services.RemoveAll<IEvalRepository>();
+                services.RemoveAll<IConversationStateRepository>();
+                services.RemoveAll<IHostedService>();
                 services.AddSingleton<IUtcClock>(new FixedClock(new DateTimeOffset(2026, 03, 19, 12, 0, 0, TimeSpan.Zero)));
                 services.AddScoped<IAnalyticsQueryExecutor, NoOpExecutor>();
+                services.AddSingleton<ITraceRepository, InMemoryTraceRepository>();
+                services.AddSingleton<IEvalRepository, InMemoryEvalRepository>();
+                services.AddSingleton<IConversationStateRepository, InMemoryConversationStateRepository>();
             });
         }
     }
