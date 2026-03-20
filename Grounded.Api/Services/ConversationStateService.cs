@@ -1,7 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Grounded.Api.Models;
-using Npgsql;
 
 namespace Grounded.Api.Services;
 
@@ -165,8 +164,6 @@ public sealed class NpgsqlConversationStateRepository : IConversationStateReposi
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync(cancellationToken);
-        await EnsureSchemaAsync(connection, cancellationToken);
-
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
@@ -198,8 +195,6 @@ public sealed class NpgsqlConversationStateRepository : IConversationStateReposi
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync(cancellationToken);
-        await EnsureSchemaAsync(connection, cancellationToken);
-
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
@@ -240,21 +235,4 @@ public sealed class NpgsqlConversationStateRepository : IConversationStateReposi
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task EnsureSchemaAsync(NpgsqlConnection connection, CancellationToken cancellationToken)
-    {
-        await using var command = connection.CreateCommand();
-        command.CommandText =
-            """
-            CREATE TABLE IF NOT EXISTS conversation_states (
-                conversation_id TEXT PRIMARY KEY,
-                question_type TEXT NOT NULL,
-                metric TEXT NOT NULL,
-                dimension TEXT NULL,
-                filters_json JSONB NOT NULL,
-                time_range_json JSONB NOT NULL,
-                updated_at_utc TIMESTAMPTZ NOT NULL
-            );
-            """;
-        await command.ExecuteNonQueryAsync(cancellationToken);
-    }
 }

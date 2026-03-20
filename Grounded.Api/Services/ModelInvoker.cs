@@ -188,26 +188,49 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
 
 public sealed class ReplayModelInvoker : IModelInvoker
 {
-    private readonly IReadOnlyList<ReplayFixture> _fixtures;
+    private static readonly JsonSerializerOptions FixtureSerializerOptions = new() { PropertyNameCaseInsensitive = true };
+
+    private readonly string _fixturePath;
+    private IReadOnlyList<ReplayFixture>? _fixtures;
 
     public ReplayModelInvoker(IConfiguration configuration)
     {
-        var path = configuration.GetValue<string>("Eval:ReplayFixturesPath") ?? "eval/replay_fixtures.json";
-        var resolved = ResolvePath(path);
-        var content = File.ReadAllText(resolved);
-        _fixtures = JsonSerializer.Deserialize<List<ReplayFixture>>(content, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        }) ?? [];
+        _fixturePath = configuration.GetValue<string>("Eval:ReplayFixturesPath") ?? "eval/replay_fixtures.json";
     }
 
     public string Name => "replay";
 
+    private IReadOnlyList<ReplayFixture> LoadFixtures()
+    {
+        if (_fixtures is not null)
+        {
+            return _fixtures;
+        }
+
+        var resolved = ResolvePath(_fixturePath);
+        var content = File.ReadAllText(resolved);
+        _fixtures = JsonSerializer.Deserialize<List<ReplayFixture>>(content, FixtureSerializerOptions) ?? [];
+        return _fixtures;
+    }
+
     public Task<ModelInvocationResult> InvokeAsync(ModelRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        IReadOnlyList<ReplayFixture> fixtures;
+        try
+        {
+            fixtures = LoadFixtures();
+        }
+        catch (Exception ex)
+        {
+            return Task.FromResult(new ModelInvocationResult(
+                false,
+                null,
+                new ModelFailure(FailureCategories.ProviderError, $"Replay fixtures could not be loaded: {ex.Message}")));
+        }
+
         var haystack = $"{request.PromptText}\n{request.PayloadJson}";
-        var fixture = _fixtures.FirstOrDefault(candidate =>
+        var fixture = fixtures.FirstOrDefault(candidate =>
             string.Equals(candidate.PromptKey, request.PromptKey, StringComparison.OrdinalIgnoreCase) &&
             haystack.Contains(candidate.MatchText, StringComparison.OrdinalIgnoreCase));
 

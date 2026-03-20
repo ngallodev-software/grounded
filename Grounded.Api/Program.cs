@@ -44,6 +44,7 @@ builder.Services.AddScoped<INpgsqlConnectionFactory, NpgsqlConnectionFactory>();
 builder.Services.AddScoped<ITraceRepository, NpgsqlTraceRepository>();
 builder.Services.AddScoped<IEvalRepository, NpgsqlEvalRepository>();
 builder.Services.AddScoped<IConversationStateRepository, NpgsqlConversationStateRepository>();
+builder.Services.AddHostedService<SchemaInitializer>();
 builder.Services.AddScoped<IAnalyticsQueryExecutor, AnalyticsQueryExecutor>();
 builder.Services.AddScoped<AnalyticsQueryPlanService>();
 

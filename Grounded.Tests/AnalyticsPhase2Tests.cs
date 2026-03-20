@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Grounded.Tests;
 
@@ -296,6 +297,7 @@ public sealed class AnalyticsPhase2Tests
                 services.RemoveAll<ITraceRepository>();
                 services.RemoveAll<IEvalRepository>();
                 services.RemoveAll<IConversationStateRepository>();
+                services.RemoveAll<IHostedService>();
                 services.AddSingleton<IUtcClock>(new FixedClock(new DateTimeOffset(2026, 03, 19, 12, 0, 0, TimeSpan.Zero)));
                 services.AddScoped<IAnalyticsQueryExecutor, NoOpExecutor>();
                 services.AddSingleton<ITraceRepository, InMemoryTraceRepository>();

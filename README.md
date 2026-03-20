@@ -188,7 +188,7 @@ dotnet run
 ```json
 {
   "ConnectionStrings": {
-    "Analytics": "Host=localhost;Database=grounded;Username=...;Password=..."
+    "AnalyticsDatabase": "Host=localhost;Database=grounded;Username=...;Password=..."
   },
   "Eval": {
     "BenchmarkCasesPath": "eval/benchmark_cases.jsonl",

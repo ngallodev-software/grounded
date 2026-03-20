@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Grounded.Api.Models;
-using Npgsql;
 
 namespace Grounded.Api.Services;
 
@@ -27,8 +26,6 @@ public sealed class NpgsqlEvalRepository : IEvalRepository
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync(cancellationToken);
-        await EnsureSchemaAsync(connection, cancellationToken);
-
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
@@ -64,22 +61,4 @@ public sealed class NpgsqlEvalRepository : IEvalRepository
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task EnsureSchemaAsync(NpgsqlConnection connection, CancellationToken cancellationToken)
-    {
-        await using var command = connection.CreateCommand();
-        command.CommandText =
-            """
-            CREATE TABLE IF NOT EXISTS eval_runs (
-                run_id TEXT PRIMARY KEY,
-                started_at_utc TIMESTAMPTZ NOT NULL,
-                completed_at_utc TIMESTAMPTZ NOT NULL,
-                planner_prompt_version TEXT NOT NULL,
-                synthesizer_prompt_version TEXT NOT NULL,
-                score NUMERIC(10,4) NOT NULL,
-                case_results_json JSONB NOT NULL,
-                comparison_json JSONB NOT NULL
-            );
-            """;
-        await command.ExecuteNonQueryAsync(cancellationToken);
-    }
 }

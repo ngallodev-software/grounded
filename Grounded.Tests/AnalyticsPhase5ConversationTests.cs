@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Grounded.Tests;
 
@@ -86,6 +87,7 @@ public sealed class AnalyticsPhase5ConversationTests
                 services.RemoveAll<ITraceRepository>();
                 services.RemoveAll<IEvalRepository>();
                 services.RemoveAll<IConversationStateRepository>();
+                services.RemoveAll<IHostedService>();
                 services.AddSingleton<IUtcClock>(new FixedClock());
                 services.AddSingleton<ILlmPlannerGateway, DeterministicLlmPlannerGateway>();
                 services.AddSingleton<ILlmGateway, DeterministicLlmGateway>();
