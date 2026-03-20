@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Grounded.Api/Grounded.Api.csproj" />
+  <Project Path="Grounded.Tests/Grounded.Tests.csproj" />
+</Solution>

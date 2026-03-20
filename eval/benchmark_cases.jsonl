@@ -1,0 +1,2 @@
+{"caseId":"agg_revenue_last_month","category":"aggregate","question":"What was total revenue last month?","expectedAnswer":"Total revenue for the selected context is 0.","notes":"Aggregate example."}
+{"caseId":"ranking_units_top_products","category":"ranking","question":"Which products sold the most units this quarter?","expectedAnswer":"Product A leads with 0 units sold.","notes":"Ranking example."}
