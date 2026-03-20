@@ -35,6 +35,7 @@ public sealed record ExecuteQueryPlanResponse(
     IReadOnlyList<IReadOnlyDictionary<string, object?>>? Rows,
     QueryExecutionMetadata? Metadata,
     IReadOnlyList<ValidationErrorDto>? Errors,
+    string? FailureCategory = null,
     AnswerDto? Answer = null,
     QueryExecutionTrace? Trace = null);
 

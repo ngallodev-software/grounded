@@ -13,19 +13,22 @@ public sealed class EvalRunner
     private readonly ScoringService _scoringService;
     private readonly RegressionComparer _regressionComparer;
     private readonly PromptStore _promptStore;
+    private readonly IEvalRepository _evalRepository;
 
     public EvalRunner(
         BenchmarkLoader benchmarkLoader,
         AnalyticsQueryPlanService queryPlanService,
         ScoringService scoringService,
         RegressionComparer regressionComparer,
-        PromptStore promptStore)
+        PromptStore promptStore,
+        IEvalRepository evalRepository)
     {
         _benchmarkLoader = benchmarkLoader;
         _queryPlanService = queryPlanService;
         _scoringService = scoringService;
         _regressionComparer = regressionComparer;
         _promptStore = promptStore;
+        _evalRepository = evalRepository;
     }
 
     public async Task<(EvalRun Run, RegressionComparisonResult Comparison)> RunAsync(CancellationToken cancellationToken)
@@ -44,15 +47,30 @@ public sealed class EvalRunner
             string? compiledSql = null;
             AnswerDto? answer = null;
             string? notes = null;
+            string? failureCategory = null;
+            long plannerLatencyMs = 0;
+            long synthesisLatencyMs = 0;
+            var totalTokensIn = 0;
+            var totalTokensOut = 0;
 
             try
             {
-                var serviceResult = await _queryPlanService.ExecuteFromQuestionAsync(benchmarkCase.Question, cancellationToken);
+                var serviceResult = await _queryPlanService.ExecuteFromQuestionAsync(
+                    benchmarkCase.Question,
+                    requestId: $"eval:{benchmarkCase.CaseId}",
+                    cancellationToken);
                 executionSuccess = serviceResult.IsSuccess;
                 executionMetadata = serviceResult.Response.Metadata;
                 compiledSql = executionMetadata?.CompiledSql;
                 answer = serviceResult.Response.Answer;
                 plannedQueryPlan = serviceResult.Response.Trace?.QueryPlan;
+                failureCategory = serviceResult.Response.FailureCategory ?? serviceResult.Response.Trace?.FailureCategory;
+                plannerLatencyMs = serviceResult.Response.Trace?.Planner?.LatencyMs ?? 0;
+                synthesisLatencyMs = serviceResult.Response.Trace?.Synthesizer is null
+                    ? 0
+                    : Math.Max(0, (long)(serviceResult.Response.Trace.Synthesizer.RespondedAt - serviceResult.Response.Trace.Synthesizer.RequestedAt).TotalMilliseconds);
+                totalTokensIn = (serviceResult.Response.Trace?.Planner?.TokensIn ?? 0) + (serviceResult.Response.Trace?.Synthesizer?.TokensIn ?? 0);
+                totalTokensOut = (serviceResult.Response.Trace?.Planner?.TokensOut ?? 0) + (serviceResult.Response.Trace?.Synthesizer?.TokensOut ?? 0);
 
                 if (answer is not null)
                 {
@@ -77,6 +95,11 @@ public sealed class EvalRunner
                 score,
                 compiledSql,
                 plannedQueryPlan,
+                failureCategory,
+                plannerLatencyMs,
+                synthesisLatencyMs,
+                totalTokensIn,
+                totalTokensOut,
                 notes,
                 executionMetadata,
                 answer));
@@ -84,17 +107,31 @@ public sealed class EvalRunner
 
         var completedAt = DateTimeOffset.UtcNow;
         var averageScore = _scoringService.Aggregate(results);
-        var prompt = _promptStore.GetPrompt("answer-synthesizer/v1.md");
+        var summary = _scoringService.BuildSummary(results);
+        var plannerPrompt = _promptStore.GetVersionedPrompt("planner", "v1");
+        var prompt = _promptStore.GetVersionedPrompt("answer-synthesizer", "v1");
         var run = new EvalRun(
             Guid.NewGuid().ToString("D"),
             startedAt,
             completedAt,
-            "planner:v1",
-            prompt.Checksum,
+            $"{plannerPrompt.PromptKey}/{plannerPrompt.Version}:{plannerPrompt.Checksum}",
+            $"{prompt.PromptKey}/{prompt.Version}:{prompt.Checksum}",
             averageScore,
+            summary,
             results);
 
         var comparison = _regressionComparer.CompareAndPersist(run);
+        await _evalRepository.PersistAsync(
+            new PersistedEvalRun(
+                run.RunId,
+                run.StartedAt,
+                run.CompletedAt,
+                run.PlannerPromptVersion,
+                run.SynthesizerPromptVersion,
+                run.Score,
+                run.CaseResults,
+                comparison),
+            cancellationToken);
         return (run, comparison);
     }
 

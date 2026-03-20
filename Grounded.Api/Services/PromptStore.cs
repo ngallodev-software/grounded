@@ -36,6 +36,21 @@ public sealed class PromptStore
         return definition;
     }
 
+    public PromptDefinition GetVersionedPrompt(string promptKey, string version)
+    {
+        if (string.IsNullOrWhiteSpace(promptKey))
+        {
+            throw new ArgumentException("promptKey must be provided", nameof(promptKey));
+        }
+
+        if (string.IsNullOrWhiteSpace(version))
+        {
+            throw new ArgumentException("version must be provided", nameof(version));
+        }
+
+        return GetPrompt($"{NormalizePath(promptKey)}/{version}.md");
+    }
+
     private static string LocatePromptRoot()
     {
         var searchRoots = new[]
@@ -84,7 +99,13 @@ public sealed class PromptStore
         var relative = Path.GetRelativePath(root, filePath);
         var content = File.ReadAllText(filePath, Encoding.UTF8);
         var checksum = ComputeChecksum(content);
-        return new PromptDefinition(relative.Replace(Path.DirectorySeparatorChar, '/'), content, checksum, DateTimeOffset.UtcNow);
+        var normalizedRelative = relative.Replace(Path.DirectorySeparatorChar, '/');
+        var segments = normalizedRelative.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var version = Path.GetFileNameWithoutExtension(normalizedRelative);
+        var promptKey = segments.Length > 1
+            ? string.Join('/', segments.Take(segments.Length - 1))
+            : version;
+        return new PromptDefinition(promptKey, version, normalizedRelative, content, checksum, DateTimeOffset.UtcNow);
     }
 
     private static string ComputeChecksum(string content)
@@ -99,6 +120,8 @@ public sealed class PromptStore
 }
 
 public sealed record PromptDefinition(
+    string PromptKey,
+    string Version,
     string RelativePath,
     string Content,
     string Checksum,

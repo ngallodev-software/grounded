@@ -56,7 +56,14 @@ public sealed class RegressionComparer
         }
 
         var content = File.ReadAllText(_historyPath);
-        return JsonSerializer.Deserialize<EvalRun>(content, _serializerOptions);
+        try
+        {
+            return JsonSerializer.Deserialize<EvalRun>(content, _serializerOptions);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private void PersistRun(EvalRun run)

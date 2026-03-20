@@ -17,6 +17,42 @@ public sealed class AnalyticsController : ControllerBase
         _evalRunner = evalRunner;
     }
 
+    [HttpPost("query")]
+    [ProducesResponseType(typeof(ExecuteQueryPlanResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ExecuteQueryPlanResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ExecuteQueryPlanResponse), StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType(typeof(ExecuteQueryPlanResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ExecuteQueryPlanResponse>> ExecuteQuestion(
+        [FromBody] ExecuteAnalyticsQuestionRequest? request,
+        CancellationToken cancellationToken)
+    {
+        var question = request?.Question?.Trim();
+        if (string.IsNullOrWhiteSpace(question) || question.Length > 500)
+        {
+            return BadRequest(new ExecuteQueryPlanResponse(
+                "error",
+                Rows: null,
+                Metadata: null,
+                Errors: new[] { new ValidationErrorDto("invalid_request", "request body must contain question with length 1..500 characters") }));
+        }
+
+        try
+        {
+            var result = await _service.ExecuteFromQuestionAsync(question, HttpContext.TraceIdentifier, request?.ConversationId, cancellationToken);
+            return result.IsSuccess
+                ? Ok(result.Response)
+                : UnprocessableEntity(result.Response);
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new ExecuteQueryPlanResponse(
+                "error",
+                Rows: null,
+                Metadata: null,
+                Errors: new[] { new ValidationErrorDto("internal_error", "unexpected application failure") }));
+        }
+    }
+
     [HttpPost("eval")]
     [ProducesResponseType(typeof(EvalResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -53,7 +89,7 @@ public sealed class AnalyticsController : ControllerBase
 
         try
         {
-            var result = await _service.ExecuteAsync(request.QueryPlan, request.UserQuestion ?? string.Empty, cancellationToken);
+            var result = await _service.ExecuteAsync(request.QueryPlan, request.UserQuestion ?? string.Empty, HttpContext.TraceIdentifier, cancellationToken);
             return result.IsSuccess
                 ? Ok(result.Response)
                 : UnprocessableEntity(result.Response);
