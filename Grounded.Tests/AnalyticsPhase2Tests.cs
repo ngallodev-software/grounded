@@ -4,8 +4,10 @@ using Grounded.Api.Models;
 using Grounded.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Npgsql;
 using Microsoft.Extensions.Hosting;
 
 namespace Grounded.Tests;
@@ -197,6 +199,41 @@ public sealed class AnalyticsPhase2Tests
         var result = _validator.Validate(CreatePlan(questionType: "time_series", timeGrain: "month", limit: 10));
 
         Assert.Contains(result.Errors, error => error.Code == "invalid_limit");
+    }
+
+    [Fact]
+    public void ConnectionFactory_DefaultsSearchPathToGroundedPublic()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:AnalyticsDatabase"] = "Host=localhost;Database=shared_local;Username=test;Password=test"
+            })
+            .Build();
+
+        var factory = new NpgsqlConnectionFactory(configuration);
+        using var connection = factory.CreateConnection();
+        var builder = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
+
+        Assert.Equal("grounded,public", builder.SearchPath);
+    }
+
+    [Fact]
+    public void ConnectionFactory_PreservesExplicitSearchPathOverride()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:AnalyticsDatabase"] = "Host=localhost;Database=shared_local;Username=test;Password=test;Search Path=custom_app,public",
+                ["Database:AppSchema"] = "grounded"
+            })
+            .Build();
+
+        var factory = new NpgsqlConnectionFactory(configuration);
+        using var connection = factory.CreateConnection();
+        var builder = new NpgsqlConnectionStringBuilder(connection.ConnectionString);
+
+        Assert.Equal("custom_app,public", builder.SearchPath);
     }
 
     [Fact]
