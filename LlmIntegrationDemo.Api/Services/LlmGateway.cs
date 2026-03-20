@@ -54,3 +54,28 @@ public sealed class DeterministicLlmGateway : ILlmGateway
 
     private const string ModelName = "deterministic-local";
 }
+
+public interface ILlmPlannerGateway
+{
+    Task<QueryPlan> PlanFromQuestionAsync(string question, CancellationToken cancellationToken);
+}
+
+public sealed class DeterministicLlmPlannerGateway : ILlmPlannerGateway
+{
+    public Task<QueryPlan> PlanFromQuestionAsync(string question, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var plan = new QueryPlan(
+            "1.0",
+            "aggregate",
+            Dimension: null,
+            Filters: Array.Empty<FilterSpec>(),
+            Metric: "revenue",
+            TimeRange: new TimeRangeSpec("last_30_days", null, null),
+            TimeGrain: null,
+            Sort: new SortSpec("metric", "desc"),
+            Limit: null,
+            UsePriorState: false);
+        return Task.FromResult(plan);
+    }
+}

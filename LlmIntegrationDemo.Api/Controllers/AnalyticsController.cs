@@ -9,10 +9,28 @@ namespace LlmIntegrationDemo.Api.Controllers;
 public sealed class AnalyticsController : ControllerBase
 {
     private readonly AnalyticsQueryPlanService _service;
+    private readonly EvalRunner _evalRunner;
 
-    public AnalyticsController(AnalyticsQueryPlanService service)
+    public AnalyticsController(AnalyticsQueryPlanService service, EvalRunner evalRunner)
     {
         _service = service;
+        _evalRunner = evalRunner;
+    }
+
+    [HttpPost("eval")]
+    [ProducesResponseType(typeof(EvalResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<EvalResponse>> RunEval(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var (run, comparison) = await _evalRunner.RunAsync(cancellationToken);
+            return Ok(new EvalResponse(run, comparison));
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
     }
 
     [HttpPost("query-plan")]

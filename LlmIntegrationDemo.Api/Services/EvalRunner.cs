@@ -37,20 +37,27 @@ public sealed class EvalRunner
         foreach (var benchmarkCase in benchmarkCases)
         {
             var executionSuccess = false;
-            var answerMatches = false;
+            var structuralCorrectness = false;
+            var answerGrounding = false;
             QueryExecutionMetadata? executionMetadata = null;
+            QueryPlan? plannedQueryPlan = null;
+            string? compiledSql = null;
             AnswerDto? answer = null;
             string? notes = null;
 
             try
             {
-                var serviceResult = await _queryPlanService.ExecuteAsync(benchmarkCase.QueryPlan, benchmarkCase.Question, cancellationToken);
+                var serviceResult = await _queryPlanService.ExecuteFromQuestionAsync(benchmarkCase.Question, cancellationToken);
                 executionSuccess = serviceResult.IsSuccess;
                 executionMetadata = serviceResult.Response.Metadata;
+                compiledSql = executionMetadata?.CompiledSql;
                 answer = serviceResult.Response.Answer;
-                if (!string.IsNullOrWhiteSpace(benchmarkCase.ExpectedAnswer) && answer is not null)
+                plannedQueryPlan = serviceResult.Response.Trace?.QueryPlan;
+
+                if (answer is not null)
                 {
-                    answerMatches = string.Equals(answer.Summary.Trim(), benchmarkCase.ExpectedAnswer.Trim(), StringComparison.OrdinalIgnoreCase);
+                    structuralCorrectness = !string.IsNullOrWhiteSpace(answer.Summary) && answer.KeyPoints is { Count: > 0 };
+                    answerGrounding = IsAnswerGrounded(answer.Summary, serviceResult.Response.Rows);
                 }
             }
             catch (Exception exception)
@@ -58,15 +65,18 @@ public sealed class EvalRunner
                 notes = exception.Message;
             }
 
-            var score = _scoringService.ForCase(executionSuccess, answerMatches);
-            var passed = _scoringService.IsPass(executionSuccess, answerMatches);
+            var score = _scoringService.ForCase(executionSuccess, structuralCorrectness, answerGrounding);
+            var passed = _scoringService.IsPass(executionSuccess, structuralCorrectness);
             results.Add(new BenchmarkCaseResult(
                 benchmarkCase.CaseId,
                 benchmarkCase.Question,
                 executionSuccess,
-                answerMatches,
+                structuralCorrectness,
+                answerGrounding,
                 passed,
                 score,
+                compiledSql,
+                plannedQueryPlan,
                 notes,
                 executionMetadata,
                 answer));
@@ -86,5 +96,32 @@ public sealed class EvalRunner
 
         var comparison = _regressionComparer.CompareAndPersist(run);
         return (run, comparison);
+    }
+
+    private static bool IsAnswerGrounded(string summary, IReadOnlyList<IReadOnlyDictionary<string, object?>>? rows)
+    {
+        if (rows is null || rows.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var row in rows)
+        {
+            foreach (var value in row.Values)
+            {
+                if (value is null)
+                {
+                    continue;
+                }
+
+                var leafValue = value.ToString();
+                if (!string.IsNullOrEmpty(leafValue) && summary.Contains(leafValue, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

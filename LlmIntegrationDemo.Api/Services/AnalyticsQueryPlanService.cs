@@ -11,6 +11,7 @@ public sealed class AnalyticsQueryPlanService
     private readonly SqlSafetyGuard _sqlSafetyGuard;
     private readonly IAnalyticsQueryExecutor _queryExecutor;
     private readonly AnswerSynthesizer _answerSynthesizer;
+    private readonly ILlmPlannerGateway _plannerGateway;
 
     public AnalyticsQueryPlanService(
         QueryPlanValidator validator,
@@ -18,7 +19,8 @@ public sealed class AnalyticsQueryPlanService
         QueryPlanCompiler compiler,
         SqlSafetyGuard sqlSafetyGuard,
         IAnalyticsQueryExecutor queryExecutor,
-        AnswerSynthesizer answerSynthesizer)
+        AnswerSynthesizer answerSynthesizer,
+        ILlmPlannerGateway plannerGateway)
     {
         _validator = validator;
         _timeRangeResolver = timeRangeResolver;
@@ -26,6 +28,13 @@ public sealed class AnalyticsQueryPlanService
         _sqlSafetyGuard = sqlSafetyGuard;
         _queryExecutor = queryExecutor;
         _answerSynthesizer = answerSynthesizer;
+        _plannerGateway = plannerGateway;
+    }
+
+    public async Task<AnalyticsQueryPlanServiceResult> ExecuteFromQuestionAsync(string userQuestion, CancellationToken cancellationToken)
+    {
+        var queryPlan = await _plannerGateway.PlanFromQuestionAsync(userQuestion, cancellationToken);
+        return await ExecuteAsync(queryPlan, userQuestion, cancellationToken);
     }
 
     public async Task<AnalyticsQueryPlanServiceResult> ExecuteAsync(QueryPlan queryPlan, string userQuestion, CancellationToken cancellationToken)
@@ -54,6 +63,7 @@ public sealed class AnalyticsQueryPlanService
             executionResult.Metadata,
             cancellationToken);
 
+        var synthesisFailed = synthesizerTrace.ErrorMessage is not null;
         var trace = new QueryExecutionTrace(
             Guid.NewGuid().ToString("D"),
             queryPlan,
@@ -62,8 +72,13 @@ public sealed class AnalyticsQueryPlanService
             answer,
             synthesizerTrace,
             Evaluation: null,
+            SynthesisFailed: synthesisFailed,
             StartedAt: startAt,
             CompletedAt: DateTimeOffset.UtcNow);
+
+        var errors = synthesisFailed
+            ? new[] { new ValidationErrorDto("synthesis_failed", synthesizerTrace.ErrorMessage!) }
+            : (IReadOnlyList<ValidationErrorDto>?)null;
 
         return new(
             true,
@@ -71,7 +86,7 @@ public sealed class AnalyticsQueryPlanService
                 "success",
                 executionResult.Rows,
                 executionResult.Metadata,
-                Errors: null,
+                Errors: errors,
                 Answer: answer,
                 Trace: trace));
     }

@@ -7,7 +7,6 @@ public sealed record BenchmarkCase(
     string CaseId,
     string Category,
     string Question,
-    QueryPlan QueryPlan,
     string? ExpectedAnswer,
     string? Notes);
 
@@ -15,9 +14,12 @@ public sealed record BenchmarkCaseResult(
     string CaseId,
     string Question,
     bool ExecutionSuccess,
-    bool AnswerMatches,
+    bool StructuralCorrectness,
+    bool AnswerGrounding,
     bool Passed,
     decimal Score,
+    string? CompiledSql,
+    QueryPlan? PlannedQueryPlan,
     string? Notes,
     QueryExecutionMetadata? ExecutionMetadata,
     AnswerDto? Answer);

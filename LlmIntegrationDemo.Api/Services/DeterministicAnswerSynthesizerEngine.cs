@@ -146,6 +146,15 @@ public sealed class DeterministicAnswerSynthesizerEngine
             }
         }
 
+        var rows = request.Rows;
+        foreach (var candidate in columns)
+        {
+            if (rows.Any(row => row.TryGetValue(candidate, out var val) && ConvertToDecimal(val) is not null))
+            {
+                return candidate;
+            }
+        }
+
         return columns.First();
     }
 

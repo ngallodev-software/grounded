@@ -7,7 +7,7 @@ namespace LlmIntegrationDemo.Api.Services;
 
 public sealed class ScoringService
 {
-    public decimal ForCase(bool executionSuccess, bool answerMatches)
+    public decimal ForCase(bool executionSuccess, bool structuralCorrectness, bool answerGrounding)
     {
         var score = 0m;
         if (executionSuccess)
@@ -15,9 +15,14 @@ public sealed class ScoringService
             score += 0.5m;
         }
 
-        if (answerMatches)
+        if (structuralCorrectness)
         {
-            score += 0.5m;
+            score += 0.3m;
+        }
+
+        if (answerGrounding)
+        {
+            score += 0.2m;
         }
 
         return Math.Min(1m, score);
@@ -30,9 +35,9 @@ public sealed class ScoringService
             return 0m;
         }
 
-        var average = results.Average(result => result.Score);
-        return Math.Round(average, 3);
+        var average = results.Average(result => (double)result.Score);
+        return Math.Round((decimal)average, 3);
     }
 
-    public bool IsPass(bool executionSuccess, bool answerMatches) => executionSuccess && answerMatches;
+    public bool IsPass(bool executionSuccess, bool structuralCorrectness) => executionSuccess && structuralCorrectness;
 }

@@ -15,6 +15,7 @@ builder.Services.AddSingleton<PromptStore>();
 builder.Services.AddSingleton<DeterministicAnswerSynthesizerEngine>();
 builder.Services.AddSingleton<AnswerOutputValidator>();
 builder.Services.AddSingleton<ILlmGateway, DeterministicLlmGateway>();
+builder.Services.AddSingleton<ILlmPlannerGateway, DeterministicLlmPlannerGateway>();
 builder.Services.AddSingleton<AnswerSynthesizer>();
 builder.Services.AddSingleton<BenchmarkLoader>();
 builder.Services.AddSingleton<ScoringService>();

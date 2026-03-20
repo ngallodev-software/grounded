@@ -21,7 +21,24 @@ public sealed class RegressionComparer
     {
         var relativePath = configuration.GetValue<string>("Eval:HistoryPath") ?? "eval/regression_history.json";
         var normalized = relativePath.Replace('/', Path.DirectorySeparatorChar);
-        _historyPath = Path.Combine(AppContext.BaseDirectory, normalized);
+        _historyPath = ResolveHistoryPath(normalized);
+    }
+
+    private static string ResolveHistoryPath(string relativePath)
+    {
+        var current = Directory.GetCurrentDirectory();
+        while (!string.IsNullOrEmpty(current))
+        {
+            var evalDir = Path.Combine(current, "eval");
+            if (Directory.Exists(evalDir))
+            {
+                return Path.Combine(current, relativePath);
+            }
+
+            current = Directory.GetParent(current)?.FullName;
+        }
+
+        return Path.Combine(Directory.GetCurrentDirectory(), relativePath);
     }
 
     public RegressionComparisonResult CompareAndPersist(EvalRun currentRun)

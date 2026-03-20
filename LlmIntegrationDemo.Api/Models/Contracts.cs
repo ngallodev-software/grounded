@@ -77,3 +77,5 @@ public sealed record ResolvedTimeRange(
 public sealed record AnalyticsQueryPlanServiceResult(
     bool IsSuccess,
     ExecuteQueryPlanResponse Response);
+
+public sealed record EvalResponse(EvalRun Run, RegressionComparisonResult Comparison);

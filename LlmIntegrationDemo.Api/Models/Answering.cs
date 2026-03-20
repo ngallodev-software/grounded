@@ -31,5 +31,6 @@ public sealed record QueryExecutionTrace(
     AnswerDto? Answer,
     SynthesizerTrace? Synthesizer,
     EvaluationTrace? Evaluation,
+    bool SynthesisFailed,
     DateTimeOffset StartedAt,
     DateTimeOffset CompletedAt);
