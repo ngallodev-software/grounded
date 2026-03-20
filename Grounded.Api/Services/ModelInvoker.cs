@@ -109,6 +109,7 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
         message.Content = new StringContent(JsonSerializer.Serialize(new
         {
             model,
+            temperature = 0,
             response_format = new { type = "json_object" },
             messages = new[]
             {
