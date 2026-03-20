@@ -3,3 +3,12 @@ obj/
 *.user
 *.suo
 .vs/
+
+# Local secrets
+.env
+
+# Database backups
+database/backups/
+
+# Local API settings
+Grounded.Api/appsettings.Local.json

@@ -208,23 +208,38 @@ The dev server proxies `/analytics/*` to `http://localhost:5252` by default. Set
 
 ## Running locally
 
-**Prerequisites:** .NET 10, Postgres (for live execution — not required for tests)
+**Prerequisites:** .NET 10, Docker, Python 3 (for seed data)
 
 ```bash
 # Run all tests (no database required)
 dotnet test Grounded.slnx
+```
 
-# Run the API
+**Start the database:**
+
+```bash
+cp .env.example .env          # set POSTGRES_PASSWORD
+bash scripts/db-up.sh         # starts Docker container, waits for healthy
+
+pip install psycopg2-binary
+python scripts/seed.py --dsn "Host=127.0.0.1;Port=5432;Database=grounded;Username=grounded;Password=<your-password>"
+```
+
+See `database/README.md` for helper scripts (`db-down.sh`, `db-reset.sh`, `db-logs.sh`).
+
+**Run the API:**
+
+```bash
 cd Grounded.Api
 dotnet run
 ```
 
-**Configuration** (`appsettings.json` or environment):
+**Configuration** (`Grounded.Api/appsettings.Local.json` or environment):
 
 ```json
 {
   "ConnectionStrings": {
-    "AnalyticsDatabase": "Host=localhost;Database=grounded;Username=...;Password=..."
+    "AnalyticsDatabase": "Host=127.0.0.1;Port=5432;Database=grounded;Username=grounded;Password=..."
   },
   "Database": {
     "AppSchema": "grounded"
