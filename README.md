@@ -190,12 +190,21 @@ dotnet run
   "ConnectionStrings": {
     "AnalyticsDatabase": "Host=localhost;Database=grounded;Username=...;Password=..."
   },
+  "Database": {
+    "AppSchema": "grounded"
+  },
   "Eval": {
     "BenchmarkCasesPath": "eval/benchmark_cases.jsonl",
     "HistoryPath": "eval/regression_history.json"
   }
 }
 ```
+
+Schema behavior:
+- If the connection string does not set `Search Path`, the app defaults it to `grounded,public`.
+- App-owned tables such as traces, eval runs, and conversation state are created in the app schema.
+- Unqualified analytics tables can still be resolved from `public`, which makes a shared local Postgres database practical without forcing a dedicated database per app.
+- If you want a different app schema, set `Database:AppSchema` to another valid PostgreSQL schema name.
 
 To use a real LLM, implement `ILlmPlannerGateway` (for planning) or `ILlmGateway` (for synthesis) and register your implementation in `Program.cs` in place of the deterministic stubs.
 

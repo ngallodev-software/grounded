@@ -32,13 +32,14 @@ Each planner call will receive a bounded, deterministic context package composed
 
 The system will not replay the full raw conversation history into every call.
 
-Conversation memory will be stored as structured state, such as:
-- last metric
-- last dimensions
-- last filters
-- last time range
-- last limit
-- last referenced entity
+Conversation memory will be stored as compact structured state containing exactly:
+- `questionType` — the resolved question type of the last successful query
+- `metric` — the last executed metric
+- `dimension` — the last dimension (nullable)
+- `filters` — the last filter set
+- `timeRange` — the last time range
+
+Fields not stored (by design): ranking `limit`, time-series `timeGrain`, referenced entity, raw question text, or prior result rows. Follow-up questions requiring unstored fields are rejected deterministically rather than inferred.
 
 Schema context will be compressed and hand-authored rather than generated from full DDL dumps.
 

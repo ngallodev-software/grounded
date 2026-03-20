@@ -303,41 +303,16 @@ If free-form date parsing becomes messy, constrain the benchmark set to supporte
 
 ## QueryPlan draft contract
 
-This is the target structured output from the planner.
+> **Note:** This was the initial draft. See `docs/phases/phase-2-spec.md` for the final implemented contract.
+> Key differences from draft: `route` removed (not a QueryPlan field), `dimensions[]` replaced by single nullable `dimension`, `sort` is a single `SortSpec` object not an array, `clarificationReason`/`notes` removed, `version` and `usePriorState` added.
 
-```json
-{
-  "route": "analytics",
-  "questionType": "ranking",
-  "metric": "revenue",
-  "dimensions": ["category"],
-  "filters": [],
-  "timeRange": {
-    "type": "last_quarter"
-  },
-  "sort": [
-    {
-      "field": "revenue",
-      "direction": "desc"
-    }
-  ],
-  "limit": 5,
-  "clarificationReason": null,
-  "notes": []
-}
-```
-
-### Allowed route values
-- analytics
-- unsupported
-- needs_clarification
-
-### Allowed questionType values
+### Allowed questionType values (final)
 - aggregate
 - grouped_breakdown
 - ranking
 - time_series
-- follow_up
+
+> `simple_follow_up` was removed in Phase 5. Follow-up questions are handled by `ConversationStateService` before the planner is invoked; the planner never emits `simple_follow_up`.
 
 ---
 

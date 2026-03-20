@@ -13,11 +13,15 @@ public sealed class SchemaInitializer : IHostedService
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
         var factory = scope.ServiceProvider.GetRequiredService<INpgsqlConnectionFactory>();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var appSchema = DatabaseSchemaSettings.GetAppSchema(configuration);
         await using var connection = factory.CreateConnection();
         await connection.OpenAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText =
-            """
+            $"""
+            CREATE SCHEMA IF NOT EXISTS "{appSchema}";
+
             CREATE TABLE IF NOT EXISTS llm_traces (
                 trace_id TEXT PRIMARY KEY,
                 request_id TEXT NOT NULL,

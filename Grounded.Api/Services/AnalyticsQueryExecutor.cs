@@ -27,7 +27,14 @@ public sealed class NpgsqlConnectionFactory : INpgsqlConnectionFactory
             throw new InvalidOperationException("Connection string 'AnalyticsDatabase' is not configured.");
         }
 
-        return new(connectionString);
+        var builder = new NpgsqlConnectionStringBuilder(connectionString);
+        if (string.IsNullOrWhiteSpace(builder.SearchPath))
+        {
+            var appSchema = DatabaseSchemaSettings.GetAppSchema(_configuration);
+            builder.SearchPath = DatabaseSchemaSettings.BuildDefaultSearchPath(appSchema);
+        }
+
+        return new(builder.ConnectionString);
     }
 }
 
