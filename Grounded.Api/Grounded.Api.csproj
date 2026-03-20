@@ -22,4 +22,12 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="appsettings.Local.json" />
+    <Content Include="appsettings.Local.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+
 </Project>

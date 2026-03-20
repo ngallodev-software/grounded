@@ -1,6 +1,7 @@
 using Grounded.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

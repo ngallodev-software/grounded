@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Grounded.Api.Models;
+using NpgsqlTypes;
 
 namespace Grounded.Api.Services;
 
@@ -64,13 +65,19 @@ public sealed class NpgsqlTraceRepository : ITraceRepository
         command.Parameters.AddWithValue("completed_at_utc", trace.CompletedAt.UtcDateTime);
         command.Parameters.AddWithValue("final_status", trace.FinalStatus);
         command.Parameters.AddWithValue("failure_category", trace.FailureCategory);
-        command.Parameters.AddWithValue("query_plan_json", (object?)Serialize(trace.QueryPlan) ?? DBNull.Value);
-        command.Parameters.AddWithValue("validation_errors_json", (object?)Serialize(trace.ValidationErrors) ?? DBNull.Value);
+        AddJsonb(command, "query_plan_json", Serialize(trace.QueryPlan));
+        AddJsonb(command, "validation_errors_json", Serialize(trace.ValidationErrors));
         command.Parameters.AddWithValue("compiled_sql", (object?)trace.CompiledSql ?? DBNull.Value);
         command.Parameters.AddWithValue("row_count", (object?)trace.RowCount ?? DBNull.Value);
-        command.Parameters.AddWithValue("planner_attempt_json", (object?)Serialize(trace.PlannerAttempt) ?? DBNull.Value);
-        command.Parameters.AddWithValue("synthesis_attempt_json", (object?)Serialize(trace.SynthesisAttempt) ?? DBNull.Value);
+        AddJsonb(command, "planner_attempt_json", Serialize(trace.PlannerAttempt));
+        AddJsonb(command, "synthesis_attempt_json", Serialize(trace.SynthesisAttempt));
         await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static void AddJsonb(Npgsql.NpgsqlCommand command, string name, string? json)
+    {
+        var p = command.Parameters.Add(name, NpgsqlDbType.Jsonb);
+        p.Value = (object?)json ?? DBNull.Value;
     }
 
     private static string? Serialize<T>(T value) =>
