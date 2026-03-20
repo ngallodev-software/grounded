@@ -13,17 +13,15 @@ Integrate an LLM into the request pipeline to convert natural-language analytics
    ↓
 POST /analytics/query
    ↓
-[PlannerOrchestrator]
+[AnalyticsQueryPlanService.ExecuteFromQuestionAsync]
    ↓
-[ContextBuilder]
+[PlannerContextBuilder + PlannerPromptRenderer]
    ↓
-[PromptRegistry]
+[ILlmPlannerGateway (OpenAiCompatiblePlannerGateway)]
    ↓
-[LlmGateway]
+[PlannerResponseParser + PlannerResponseRepairService]
    ↓
-[PlannerResponseValidator]
-   ↓
-[Phase 2 Pipeline]
+[Phase 2 Pipeline (QueryPlanValidator → Compiler → Safety → Executor)]
    ↓
 [Response]
 ```
@@ -64,7 +62,8 @@ POST /analytics/query
 ### Request
 ```json
 {
-  "userMessage": "Top 5 categories by revenue last quarter"
+  "question": "Top 5 categories by revenue last quarter",
+  "conversationId": "optional-string-max-128-chars"
 }
 ```
 
@@ -85,11 +84,13 @@ POST /analytics/query
 
 ## 5. Components
 
-- PlannerOrchestrator
-- ContextBuilder
-- PromptRegistry
-- LlmGateway
-- PlannerResponseValidator
+- `AnalyticsQueryPlanService` — orchestrates the full NL → execution path
+- `PlannerContextBuilder` — builds the `PlannerContext` from `SqlFragmentRegistry`
+- `PlannerPromptRenderer` — assembles the versioned prompt with context and user question
+- `PromptStore` — loads versioned prompt files from disk (`prompts/planner/v1.md`)
+- `ILlmPlannerGateway` / `OpenAiCompatiblePlannerGateway` — calls the model; `DeterministicLlmPlannerGateway` used in tests
+- `PlannerResponseParser` — parses raw model JSON into `QueryPlan`
+- `PlannerResponseRepairService` — attempts one repair pass (strip markdown fences, extract JSON object)
 
 ---
 

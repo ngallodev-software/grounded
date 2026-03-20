@@ -14,8 +14,8 @@ Build a fixed-scope analytics domain for natural-language questions over an e-co
    One metric ranked by exactly one whitelisted dimension with an explicit limit.
 4. `time_series`
    One metric over time using a single time grain.
-5. `simple_follow_up`
-   A refinement of the immediately prior analytical state. The final emitted `QueryPlan` must still be fully resolved and executable.
+5. ~~`simple_follow_up`~~ *(removed in Phase 5)*
+   Follow-up questions are now intercepted by `ConversationStateService` before planning. The three supported follow-up patterns (last quarter, same thing by category, electronics only) are resolved deterministically from compact stored state. The planner no longer emits a `simple_follow_up` question type; any attempt to do so is rejected by `QueryPlanValidator` as `unsupported_question_type`.
 
 ### Explicit unsupported cases
 - More than one grouping dimension in a single query

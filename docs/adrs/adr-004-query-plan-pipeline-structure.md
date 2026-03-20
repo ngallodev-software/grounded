@@ -1,7 +1,7 @@
 # ADR-004: Query plan pipeline structure
 
 ## Status
-Accepted
+Accepted — updated Phase 5 (2026-03-20)
 
 ## Date
 2026-03-19
@@ -12,7 +12,7 @@ Phase 2 introduces a `POST /analytics/query-plan` endpoint that accepts a struct
 The key question is how to structure these responsibilities so that downstream components never receive unvetted SQL or unsupported metrics, and so that each step is independently testable.
 
 ## Decision
-All analytics query plan handling is concentrated in `LlmIntegrationDemo.Api.Services`. The call stack must not leave this assembly before returning a result to the controller.
+All analytics query plan handling is concentrated in `Grounded.Api.Services`. The call stack must not leave this assembly before returning a result to the controller.
 
 The pipeline is implemented as a strict linear sequence:
 
@@ -38,8 +38,21 @@ Stateless services (validator, compiler, registry, resolver, safety guard) are r
 
 ### Negative
 - Adding a new metric, dimension, or filter requires touching the registry, validator, compiler, and tests in lock-step — there is no single registration point.
-- `AnalyticsQueryPlanService` is the only orchestrator; if a second endpoint needs a subset of the pipeline, the pipeline cannot be partially reused without refactoring.
+- `AnalyticsQueryPlanService` is the only orchestrator; if a second endpoint needs a subset of the pipeline, the pipeline cannot be partially reused without refactoring. *(Phase 5 added `POST /analytics/query` as a second entry point; both routes funnel through `ExecuteInternalAsync` — the concern was not eliminated, just mitigated by a shared private path.)*
 - All SQL generation logic lives in one compiler class; as the number of supported metrics and question types grows, this class will need careful organization to remain readable.
+
+## Phase 5 additions (2026-03-20)
+
+The following components were added on top of the Phase 2 pipeline structure without altering the core decision:
+
+- `POST /analytics/query` — NL endpoint accepting `{ question, conversationId? }`. Routes through `AnalyticsQueryPlanService.ExecuteFromQuestionAsync`, which calls the planner gateway before entering the existing pipeline.
+- `ConversationStateService` / `NpgsqlConversationStateRepository` — persist compact 5-field state per `conversationId`. Follow-up questions are resolved deterministically before the planner is invoked.
+- `ITraceRepository`, `IEvalRepository` — persist full execution traces and eval run records to Postgres via `NpgsqlTraceRepository` / `NpgsqlEvalRepository`.
+- `SchemaInitializer` (`IHostedService`) — runs all `CREATE TABLE IF NOT EXISTS` DDL once at startup.
+- `OpenAiCompatiblePlannerGateway`, `OpenAiCompatibleAnswerGateway`, `ModelInvoker` — replace deterministic stubs as the default production gateways. Deterministic stubs are retained for tests.
+- `PlannerContextBuilder`, `PlannerPromptRenderer`, `PlannerResponseParser`, `PlannerResponseRepairService` — decompose the planner context and repair concerns that were previously collapsed into `DeterministicLlmPlannerGateway`.
+
+The DI registration strategy expanded: `ITraceRepository`, `IEvalRepository`, and `IConversationStateRepository` are scoped (per-request DB lifecycle). `SchemaInitializer` is a hosted singleton.
 
 ## Alternatives considered
 
