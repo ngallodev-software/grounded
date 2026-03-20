@@ -202,7 +202,7 @@ public sealed class AnalyticsPhase2Tests
         await using var factory = new AnalyticsApiFactory();
         using var client = factory.CreateClient();
 
-        var response = await client.PostAsJsonAsync("/analytics/query-plan", new ExecuteQueryPlanRequest(CreatePlan(questionType: "simple_follow_up")));
+        var response = await client.PostAsJsonAsync("/analytics/query-plan", new ExecuteQueryPlanRequest(CreatePlan(questionType: "simple_follow_up"), "Why is revenue dropping?"));
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<ExecuteQueryPlanResponse>();

@@ -24,18 +24,18 @@ public sealed class AnalyticsController : ControllerBase
         [FromBody] ExecuteQueryPlanRequest? request,
         CancellationToken cancellationToken)
     {
-        if (request?.QueryPlan is null)
+        if (request?.QueryPlan is null || string.IsNullOrWhiteSpace(request.UserQuestion))
         {
             return BadRequest(new ExecuteQueryPlanResponse(
                 "error",
                 Rows: null,
                 Metadata: null,
-                Errors: new[] { new ValidationErrorDto("invalid_request", "request body must contain queryPlan") }));
+                Errors: new[] { new ValidationErrorDto("invalid_request", "request body must contain queryPlan and userQuestion") }));
         }
 
         try
         {
-            var result = await _service.ExecuteAsync(request.QueryPlan, cancellationToken);
+            var result = await _service.ExecuteAsync(request.QueryPlan, request.UserQuestion ?? string.Empty, cancellationToken);
             return result.IsSuccess
                 ? Ok(result.Response)
                 : UnprocessableEntity(result.Response);

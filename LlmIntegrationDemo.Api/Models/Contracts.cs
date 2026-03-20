@@ -27,13 +27,16 @@ public sealed record TimeRangeSpec(
     string? EndDate);
 
 public sealed record ExecuteQueryPlanRequest(
-    QueryPlan QueryPlan);
+    QueryPlan QueryPlan,
+    string? UserQuestion);
 
 public sealed record ExecuteQueryPlanResponse(
     string Status,
     IReadOnlyList<IReadOnlyDictionary<string, object?>>? Rows,
     QueryExecutionMetadata? Metadata,
-    IReadOnlyList<ValidationErrorDto>? Errors);
+    IReadOnlyList<ValidationErrorDto>? Errors,
+    AnswerDto? Answer = null,
+    QueryExecutionTrace? Trace = null);
 
 public sealed record CompiledQuery(
     string Sql,
