@@ -1,0 +1,6 @@
+@LlmIntegrationDemo.Api_HostAddress = http://localhost:5241
+
+GET {{LlmIntegrationDemo.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
