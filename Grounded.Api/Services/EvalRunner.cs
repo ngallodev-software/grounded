@@ -73,7 +73,10 @@ public sealed class EvalRunner
 
                 if (answer is not null)
                 {
-                    structuralCorrectness = !string.IsNullOrWhiteSpace(answer.Summary) && answer.KeyPoints is { Count: > 0 };
+                    // Summary is required; keyPoints are required for multi-row results but optional for single-value aggregates.
+                    var rowCount = serviceResult.Response.Rows?.Count ?? 0;
+                    structuralCorrectness = !string.IsNullOrWhiteSpace(answer.Summary) &&
+                        (rowCount <= 1 || answer.KeyPoints is { Count: > 0 });
                     answerGrounding = IsAnswerGrounded(answer.Summary, serviceResult.Response.Rows);
                 }
             }

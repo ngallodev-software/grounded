@@ -314,9 +314,38 @@ public sealed class QueryPlanCompiler
             return sqlExpression;
         }
 
-        return sqlExpression
-            .Replace("c.", $"{sourceAlias}.", StringComparison.Ordinal)
-            .Replace("o.", $"{sourceAlias}.", StringComparison.Ordinal)
-            .Replace("p.", $"{sourceAlias}.", StringComparison.Ordinal);
+        return ReplaceAlias(ReplaceAlias(ReplaceAlias(sqlExpression, "c.", sourceAlias), "o.", sourceAlias), "p.", sourceAlias);
+    }
+
+    private static string ReplaceAlias(string expression, string oldAlias, string newAlias)
+    {
+        var result = new System.Text.StringBuilder(expression.Length);
+        var i = 0;
+        while (i < expression.Length)
+        {
+            var idx = expression.IndexOf(oldAlias, i, StringComparison.Ordinal);
+            if (idx == -1)
+            {
+                result.Append(expression, i, expression.Length - i);
+                break;
+            }
+
+            // Only replace if preceded by a non-letter/digit/underscore (i.e. a real alias boundary)
+            var preceded = idx == 0 || !char.IsLetterOrDigit(expression[idx - 1]) && expression[idx - 1] != '_';
+            result.Append(expression, i, idx - i);
+            if (preceded)
+            {
+                result.Append(newAlias);
+                result.Append('.');
+            }
+            else
+            {
+                result.Append(oldAlias);
+            }
+
+            i = idx + oldAlias.Length;
+        }
+
+        return result.ToString();
     }
 }

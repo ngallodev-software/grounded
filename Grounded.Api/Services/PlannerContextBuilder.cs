@@ -60,7 +60,7 @@ public sealed class PlannerContextBuilder
                 new QueryPlan("1.0", "aggregate", null, [], "__unsupported__", new("last_30_days", null, null), null, new("metric", "desc"), null, false)),
             new PlannerExample(
                 "Top products by units sold this year.",
-                new QueryPlan("1.0", "aggregate", null, [], "__unsupported__", new("last_30_days", null, null), null, new("metric", "desc"), null, false)),
+                new QueryPlan("1.0", "ranking", "product_name", [], "units_sold", new("year_to_date", null, null), null, new("metric", "desc"), 5, false)),
             new PlannerExample(
                 "Show revenue by product category where country is Canada.",
                 new QueryPlan("1.0", "aggregate", null, [], "__unsupported__", new("last_30_days", null, null), null, new("metric", "desc"), null, false)),

@@ -11,13 +11,13 @@ interface AnswerPanelProps {
 
 const SUGGESTED_QUESTIONS = [
   'Total revenue last month',
-  'Revenue by category last quarter',
+  'Revenue by product category last quarter',
   'Top 10 products by units sold this year',
   'Monthly revenue for last 6 months',
   'Average order value in 2024',
   'Revenue by shipping region last year',
   'Units sold by sales channel last 90 days',
-  'Top 5 customers by order count',
+  'Top 5 customers by order count last year',
 ]
 
 const SCHEMA_SECTIONS = [
@@ -26,9 +26,10 @@ const SCHEMA_SECTIONS = [
     color: 'text-amber-400',
     items: [
       { name: 'revenue', desc: 'sum of (quantity × unit_price − discount)' },
-      { name: 'units_sold', desc: 'total quantity across completed orders' },
       { name: 'order_count', desc: 'number of orders' },
-      { name: 'avg_order_value', desc: 'average revenue per order' },
+      { name: 'units_sold', desc: 'total quantity across completed orders' },
+      { name: 'average_order_value', desc: 'revenue ÷ order count' },
+      { name: 'new_customer_count', desc: 'customers placing their first order' },
     ],
   },
   {
@@ -36,12 +37,14 @@ const SCHEMA_SECTIONS = [
     color: 'text-emerald-400',
     items: [
       { name: 'product_category', desc: 'Electronics · Home · Office · Fitness · Accessories' },
-      { name: 'product_name', desc: 'individual product' },
+      { name: 'product_subcategory', desc: 'sub-level within a category' },
+      { name: 'product_name', desc: 'individual product (use for ranking)' },
+      { name: 'sales_channel', desc: 'Web · Mobile · Marketplace' },
+      { name: 'shipping_region', desc: 'West · East · South · Central' },
       { name: 'customer_segment', desc: 'Consumer · SMB · Enterprise' },
       { name: 'customer_region', desc: 'West · East · South · Central' },
       { name: 'customer_name', desc: 'individual customer (use for ranking)' },
-      { name: 'sales_channel', desc: 'Web · Mobile · Marketplace' },
-      { name: 'acquisition_channel', desc: 'Organic · Paid Search · Email · Affiliate · Social' },
+      { name: 'acquisition_channel', desc: 'Organic · Paid Search · Email · Affiliate · Social — new customers only' },
     ],
   },
   {
@@ -49,6 +52,7 @@ const SCHEMA_SECTIONS = [
     color: 'text-zinc-400',
     items: [
       { name: 'last 7 / 30 / 90 days', desc: '' },
+      { name: 'last 6 / 12 months', desc: '' },
       { name: 'last month / quarter / year', desc: '' },
       { name: 'month / quarter / year to date', desc: '' },
       { name: 'specific year', desc: 'e.g. "in 2024" or "for 2025"' },
@@ -59,8 +63,11 @@ const SCHEMA_SECTIONS = [
     label: 'Filters',
     color: 'text-zinc-400',
     items: [
-      { name: 'status', desc: 'Completed · Cancelled · Refunded' },
-      { name: 'segment / region / channel', desc: 'combine with any query' },
+      { name: 'sales_channel', desc: 'Web · Mobile · Marketplace' },
+      { name: 'product_category', desc: 'Electronics · Home · Office · Fitness · Accessories' },
+      { name: 'customer_segment', desc: 'Consumer · SMB · Enterprise' },
+      { name: 'customer_region / shipping_region', desc: 'West · East · South · Central' },
+      { name: 'acquisition_channel', desc: 'Organic · Paid Search · Email · Affiliate · Social' },
     ],
   },
 ]

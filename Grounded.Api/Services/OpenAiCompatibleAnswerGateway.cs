@@ -40,7 +40,10 @@ public sealed class OpenAiCompatibleAnswerGateway : ILlmGateway
                 prompt.Version,
                 prompt.Checksum,
                 "GROUNDED_SYNTHESIS_MODEL",
-                "GROUNDED_SYNTHESIS_API_KEY"),
+                "GROUNDED_SYNTHESIS_API_KEY",
+                UseStructuredOutput: true,
+                StructuredOutputSchemaJson: AnswerSynthesizerSchema.Json,
+                StructuredOutputSchemaName: AnswerSynthesizerSchema.Name),
             cancellationToken);
 
         if (!result.IsSuccess || result.Response is null)

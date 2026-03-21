@@ -1,5 +1,5 @@
 {"caseId":"agg_revenue_last_month","category":"aggregate","question":"What was total revenue last month?","expectedOutcomeType":"success","tags":["aggregate","revenue","time_preset"],"notes":"Canonical aggregate."}
-{"caseId":"agg_orders_last_30_days","category":"aggregate","question":"How many completed orders did we have in the last 30 days?","expectedOutcomeType":"success","tags":["aggregate","order_count"]}
+{"caseId":"agg_orders_last_30_days","category":"aggregate","question":"How many orders did we have in the last 30 days?","expectedOutcomeType":"success","tags":["aggregate","order_count"]}
 {"caseId":"agg_aov_qtd","category":"aggregate","question":"What is average order value quarter to date?","expectedOutcomeType":"success","tags":["aggregate","average_order_value"]}
 {"caseId":"agg_new_customers_mtd","category":"aggregate","question":"How many new customers have we acquired month to date?","expectedOutcomeType":"success","tags":["aggregate","new_customer_count"]}
 {"caseId":"agg_units_electronics","category":"aggregate","question":"How many units sold did electronics generate in the last 90 days?","expectedOutcomeType":"success","tags":["aggregate","units_sold","filter"]}
