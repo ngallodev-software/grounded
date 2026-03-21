@@ -31,7 +31,7 @@ builder.Services.AddHttpClient<OpenAiCompatibleModelInvoker>(client =>
     client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
     var timeoutSeconds = int.TryParse(Environment.GetEnvironmentVariable("GROUNDED_PLANNER_TIMEOUT_SECONDS"), out var configuredTimeout)
         ? configuredTimeout
-        : 30;
+        : 15;
     client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
 });
 builder.Services.AddSingleton<IModelInvoker>(services => services.GetRequiredService<OpenAiCompatibleModelInvoker>());

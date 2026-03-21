@@ -124,6 +124,7 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
         {
             model,
             temperature = 0,
+            max_tokens = 500,
             response_format = responseFormat,
             messages = new[]
             {
