@@ -69,6 +69,7 @@ export function QueryInput({ onSubmit, isLoading, prefill, onPrefillConsumed, re
           onKeyDown={handleKeyDown}
           placeholder="Ask an analytics question — e.g. Revenue by category last quarter"
           rows={1}
+          maxLength={500}
           disabled={isLoading}
           className={cn(
             'flex-1 resize-none bg-transparent px-5 py-4 text-sm text-zinc-100',
@@ -77,7 +78,15 @@ export function QueryInput({ onSubmit, isLoading, prefill, onPrefillConsumed, re
             'disabled:opacity-50 disabled:cursor-not-allowed'
           )}
         />
-        <div className="flex items-end pb-2 pr-2 shrink-0">
+        <div className="flex items-end pb-2 pr-2 shrink-0 gap-2">
+          {value.length > 200 && (
+            <span className={cn(
+              'text-[10px] font-mono tabular-nums self-end pb-2.5',
+              value.length >= 490 ? 'text-red-400' : value.length >= 400 ? 'text-amber-500/70' : 'text-zinc-600'
+            )}>
+              {value.length}/500
+            </span>
+          )}
           <Button
             type="submit"
             disabled={isLoading || !value.trim()}
