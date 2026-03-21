@@ -19,6 +19,7 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID]
     security_opt: [no-new-privileges:true]
 
   api:
