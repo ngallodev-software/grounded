@@ -32,6 +32,7 @@ builder.Services.AddSingleton<PlannerContextBuilder>();
 builder.Services.AddSingleton<PlannerPromptRenderer>();
 builder.Services.AddSingleton<PlannerResponseParser>();
 builder.Services.AddSingleton<PlannerResponseRepairService>();
+builder.Services.AddSingleton<PlannerResultCache>();
 builder.Services.AddScoped<ConversationStateService>();
 builder.Services.AddSingleton<DeterministicAnswerSynthesizerEngine>();
 builder.Services.AddSingleton<ModelInvokerResolver>();

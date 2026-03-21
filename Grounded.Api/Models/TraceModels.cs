@@ -65,6 +65,7 @@ public sealed record PersistedPlannerAttempt(
     bool ParseSucceeded,
     bool RepairAttempted,
     bool RepairSucceeded,
+    bool CacheHit,
     string FailureCategory,
     string? FailureMessage,
     string? RawResponse,

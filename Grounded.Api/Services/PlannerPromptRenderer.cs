@@ -14,16 +14,19 @@ public sealed class PlannerPromptRenderer
 
     private readonly PromptStore _promptStore;
     private readonly PlannerContextBuilder _contextBuilder;
+    private readonly IConfiguration _configuration;
 
-    public PlannerPromptRenderer(PromptStore promptStore, PlannerContextBuilder contextBuilder)
+    public PlannerPromptRenderer(PromptStore promptStore, PlannerContextBuilder contextBuilder, IConfiguration configuration)
     {
         _promptStore = promptStore;
         _contextBuilder = contextBuilder;
+        _configuration = configuration;
     }
 
     public PlannerPromptRenderResult Render(string userQuestion, ConversationStateSnapshot? conversationState = null)
     {
-        var prompt = _promptStore.GetVersionedPrompt("planner", "v1");
+        var version = _configuration["GROUNDED_PLANNER_PROMPT_VERSION"] ?? "v2";
+        var prompt = _promptStore.GetVersionedPrompt("planner", version);
         var context = _contextBuilder.Build();
         var builder = new StringBuilder(prompt.Content);
         builder.AppendLine();

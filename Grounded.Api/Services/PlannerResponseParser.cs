@@ -43,34 +43,91 @@ public sealed class PlannerResponseParser
     // Normalize common LLM synonym/alias variations to canonical field names.
     private static QueryPlan NormalizeAliases(QueryPlan plan)
     {
-        var metric = plan.Metric switch
+        var metricResolution = ResolveMetric(plan.Metric);
+        var dimensionResolution = ResolveDimension(plan.Dimension);
+
+        var metric = metricResolution.Canonical;
+        var dimension = dimensionResolution.Canonical;
+
+        var resolvedFromParts = new List<string>();
+        if (metricResolution.WasResolved && metricResolution.Original is not null)
         {
-            "avg_order_value"        => "average_order_value",
-            "aov"                    => "average_order_value",
-            "orders"                 => "order_count",
-            "num_orders"             => "order_count",
-            "number_of_orders"       => "order_count",
-            "units"                  => "units_sold",
-            "quantity_sold"          => "units_sold",
-            "new_customers"          => "new_customer_count",
-            _                        => plan.Metric
+            resolvedFromParts.Add(metricResolution.Original);
+        }
+
+        if (dimensionResolution.WasResolved && dimensionResolution.Original is not null)
+        {
+            resolvedFromParts.Add(dimensionResolution.Original);
+        }
+
+        var resolvedFrom = resolvedFromParts.Count switch
+        {
+            0 => plan.ResolvedFrom,
+            1 => resolvedFromParts[0],
+            _ => string.Join("; ", resolvedFromParts)
         };
 
-        var dimension = plan.Dimension switch
-        {
-            "category"               => "product_category",
-            "subcategory"            => "product_subcategory",
-            "channel"                => "sales_channel",
-            "region"                 => "shipping_region",
-            "segment"                => "customer_segment",
-            "customer"               => "customer_name",
-            "product"                => "product_name",
-            _                        => plan.Dimension
-        };
+        var confidence = plan.Confidence ?? EstimateConfidence(metric, dimension, resolvedFromParts.Count);
 
-        if (ReferenceEquals(metric, plan.Metric) && ReferenceEquals(dimension, plan.Dimension))
+        if (ReferenceEquals(metric, plan.Metric) &&
+            ReferenceEquals(dimension, plan.Dimension) &&
+            string.Equals(resolvedFrom, plan.ResolvedFrom, StringComparison.Ordinal) &&
+            confidence == plan.Confidence)
+        {
             return plan;
+        }
 
-        return plan with { Metric = metric, Dimension = dimension };
+        return plan with
+        {
+            Metric = metric,
+            Dimension = dimension,
+            ResolvedFrom = resolvedFrom,
+            Confidence = confidence
+        };
+    }
+
+    private static (string Canonical, string? Original, bool WasResolved) ResolveMetric(string metric) => metric switch
+    {
+        "avg_order_value" => ("average_order_value", metric, true),
+        "aov" => ("average_order_value", metric, true),
+        "orders" => ("order_count", metric, true),
+        "num_orders" => ("order_count", metric, true),
+        "number_of_orders" => ("order_count", metric, true),
+        "units" => ("units_sold", metric, true),
+        "quantity_sold" => ("units_sold", metric, true),
+        "new_customers" => ("new_customer_count", metric, true),
+        _ => (metric, null, false)
+    };
+
+    private static (string? Canonical, string? Original, bool WasResolved) ResolveDimension(string? dimension) => dimension switch
+    {
+        "category" => ("product_category", dimension, true),
+        "subcategory" => ("product_subcategory", dimension, true),
+        "channel" => ("sales_channel", dimension, true),
+        "region" => ("shipping_region", dimension, true),
+        "segment" => ("customer_segment", dimension, true),
+        "customer" => ("customer_name", dimension, true),
+        "product" => ("product_name", dimension, true),
+        _ => (dimension, null, false)
+    };
+
+    private static decimal EstimateConfidence(string metric, string? dimension, int resolutionCount)
+    {
+        if (string.Equals(metric, "__unsupported__", StringComparison.Ordinal))
+        {
+            return 0.35m;
+        }
+
+        if (resolutionCount >= 2)
+        {
+            return 0.89m;
+        }
+
+        if (resolutionCount == 1)
+        {
+            return 0.92m;
+        }
+
+        return dimension is null ? 0.98m : 0.96m;
     }
 }

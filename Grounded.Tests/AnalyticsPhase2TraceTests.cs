@@ -161,6 +161,7 @@ public sealed class AnalyticsPhase2TraceTests
             parseSucceeded,
             false,
             false,
+            false,
             failureCategory,
             failureMessage);
 
@@ -179,6 +180,7 @@ public sealed class AnalyticsPhase2TraceTests
             trace.ParseSucceeded,
             trace.RepairAttempted,
             trace.RepairSucceeded,
+            trace.CacheHit,
             trace.FailureCategory,
             trace.FailureMessage,
             null,

@@ -9,6 +9,7 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
     private readonly PlannerPromptRenderer _promptRenderer;
     private readonly PlannerResponseParser _parser;
     private readonly PlannerResponseRepairService _repairService;
+    private readonly PlannerResultCache _cache;
     private readonly JsonSerializerOptions _serializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -18,17 +19,29 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
         ModelInvokerResolver modelInvokerResolver,
         PlannerPromptRenderer promptRenderer,
         PlannerResponseParser parser,
-        PlannerResponseRepairService repairService)
+        PlannerResponseRepairService repairService,
+        PlannerResultCache cache)
     {
         _modelInvokerResolver = modelInvokerResolver;
         _promptRenderer = promptRenderer;
         _parser = parser;
         _repairService = repairService;
+        _cache = cache;
     }
 
     public async Task<PlannerGatewayResult> PlanFromQuestionAsync(string question, ConversationStateSnapshot? conversationState, CancellationToken cancellationToken)
     {
         var prompt = _promptRenderer.Render(question, conversationState);
+        if (_cache.TryGet(prompt.RenderedPrompt, out var cached) && cached is not null)
+        {
+            return new PlannerGatewayResult(
+                true,
+                cached.ParseResult.QueryPlan,
+                CreateTrace(prompt, cached.RawResponse, cached.ParseResult, cacheHit: true),
+                CreateAttempt(prompt, cached.RawResponse, cached.ParseResult, cacheHit: true),
+                null);
+        }
+
         var invokerName = IsReplayEnabled() ? "replay" : "openai_compatible";
         var invocation = await _modelInvokerResolver.GetRequired(invokerName).InvokeAsync(
             new ModelRequest(
@@ -73,16 +86,18 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
             return new PlannerGatewayResult(
                 false,
                 null,
-                CreateTrace(prompt, rawResponse, parsed),
-                CreateAttempt(prompt, rawResponse, parsed),
+                CreateTrace(prompt, rawResponse, parsed, cacheHit: false),
+                CreateAttempt(prompt, rawResponse, parsed, cacheHit: false),
                 [new ValidationErrorDto(parsed.FailureCategory, parsed.FailureMessage ?? "planner output could not be parsed")]);
         }
+
+        _cache.Set(prompt.RenderedPrompt, rawResponse, parsed);
 
         return new PlannerGatewayResult(
             true,
             parsed.QueryPlan,
-            CreateTrace(prompt, rawResponse, parsed),
-            CreateAttempt(prompt, rawResponse, parsed),
+            CreateTrace(prompt, rawResponse, parsed, cacheHit: false),
+            CreateAttempt(prompt, rawResponse, parsed, cacheHit: false),
             null);
     }
 
@@ -111,6 +126,7 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
             false,
             false,
             false,
+            false,
             failureCategory,
             failureMessage);
         var attempt = new PersistedPlannerAttempt(
@@ -127,6 +143,7 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
             false,
             false,
             false,
+            false,
             failureCategory,
             failureMessage,
             null,
@@ -135,39 +152,41 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
         return new PlannerGatewayResult(false, null, trace, attempt, [new ValidationErrorDto(failureCategory, failureMessage)]);
     }
 
-    private static PlannerTrace CreateTrace(PlannerPromptRenderResult prompt, PlannerRawResponse rawResponse, PlannerParseResult parseResult) =>
+    private static PlannerTrace CreateTrace(PlannerPromptRenderResult prompt, PlannerRawResponse rawResponse, PlannerParseResult parseResult, bool cacheHit) =>
         new(
             prompt.Prompt.PromptKey,
             prompt.Prompt.Version,
             prompt.Prompt.Checksum,
-            rawResponse.Provider,
+            cacheHit ? "planner_cache" : rawResponse.Provider,
             rawResponse.ModelName,
-            rawResponse.RequestedAt,
-            rawResponse.RespondedAt,
-            Math.Max(0, (long)(rawResponse.RespondedAt - rawResponse.RequestedAt).TotalMilliseconds),
-            rawResponse.Usage.TokensIn,
-            rawResponse.Usage.TokensOut,
+            cacheHit ? DateTimeOffset.UtcNow : rawResponse.RequestedAt,
+            cacheHit ? DateTimeOffset.UtcNow : rawResponse.RespondedAt,
+            cacheHit ? 0 : Math.Max(0, (long)(rawResponse.RespondedAt - rawResponse.RequestedAt).TotalMilliseconds),
+            cacheHit ? 0 : rawResponse.Usage.TokensIn,
+            cacheHit ? 0 : rawResponse.Usage.TokensOut,
             parseResult.IsSuccess,
             parseResult.RepairAttempted,
             parseResult.RepairSucceeded,
+            cacheHit,
             parseResult.FailureCategory,
             parseResult.FailureMessage);
 
-    private PersistedPlannerAttempt CreateAttempt(PlannerPromptRenderResult prompt, PlannerRawResponse rawResponse, PlannerParseResult parseResult) =>
+    private PersistedPlannerAttempt CreateAttempt(PlannerPromptRenderResult prompt, PlannerRawResponse rawResponse, PlannerParseResult parseResult, bool cacheHit) =>
         new(
             prompt.Prompt.PromptKey,
             prompt.Prompt.Version,
             prompt.Prompt.Checksum,
-            rawResponse.Provider,
+            cacheHit ? "planner_cache" : rawResponse.Provider,
             rawResponse.ModelName,
-            rawResponse.RequestedAt,
-            rawResponse.RespondedAt,
-            Math.Max(0, (long)(rawResponse.RespondedAt - rawResponse.RequestedAt).TotalMilliseconds),
-            rawResponse.Usage.TokensIn,
-            rawResponse.Usage.TokensOut,
+            cacheHit ? DateTimeOffset.UtcNow : rawResponse.RequestedAt,
+            cacheHit ? DateTimeOffset.UtcNow : rawResponse.RespondedAt,
+            cacheHit ? 0 : Math.Max(0, (long)(rawResponse.RespondedAt - rawResponse.RequestedAt).TotalMilliseconds),
+            cacheHit ? 0 : rawResponse.Usage.TokensIn,
+            cacheHit ? 0 : rawResponse.Usage.TokensOut,
             parseResult.IsSuccess,
             parseResult.RepairAttempted,
             parseResult.RepairSucceeded,
+            cacheHit,
             parseResult.FailureCategory,
             parseResult.FailureMessage,
             parseResult.OriginalContent,

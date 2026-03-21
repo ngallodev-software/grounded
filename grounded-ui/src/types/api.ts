@@ -27,6 +27,7 @@ export interface LlmStageTrace {
   promptVersion?: string
   parseSucceeded?: boolean
   repairAttempted?: boolean
+  cacheHit?: boolean
   failureMessage?: string | null
   // synthesizer-specific
   errorMessage?: string | null

@@ -14,7 +14,7 @@ public static class QueryPlanSchema
           "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "additionalProperties": false,
-          "required": ["version","questionType","metric","dimension","filters","timeRange","timeGrain","sort","limit","usePriorState"],
+          "required": ["version","questionType","metric","dimension","filters","timeRange","timeGrain","sort","limit","usePriorState","resolvedFrom","confidence"],
           "properties": {
             "version": { "type": "string" },
             "questionType": {
@@ -63,7 +63,9 @@ public static class QueryPlanSchema
               }
             },
             "limit": { "type": ["integer","null"] },
-            "usePriorState": { "type": "boolean" }
+            "usePriorState": { "type": "boolean" },
+            "resolvedFrom": { "type": ["string","null"] },
+            "confidence": { "type": ["number","null"] }
           }
         }
         """;

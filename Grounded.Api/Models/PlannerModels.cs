@@ -82,5 +82,6 @@ public sealed record PlannerTrace(
     bool ParseSucceeded,
     bool RepairAttempted,
     bool RepairSucceeded,
+    bool CacheHit,
     string FailureCategory,
     string? FailureMessage);

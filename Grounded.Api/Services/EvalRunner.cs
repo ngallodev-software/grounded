@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Grounded.Api.Models;
 
 namespace Grounded.Api.Services;
@@ -14,6 +10,7 @@ public sealed class EvalRunner
     private readonly RegressionComparer _regressionComparer;
     private readonly PromptStore _promptStore;
     private readonly IEvalRepository _evalRepository;
+    private readonly IConfiguration _configuration;
 
     public EvalRunner(
         BenchmarkLoader benchmarkLoader,
@@ -21,7 +18,8 @@ public sealed class EvalRunner
         ScoringService scoringService,
         RegressionComparer regressionComparer,
         PromptStore promptStore,
-        IEvalRepository evalRepository)
+        IEvalRepository evalRepository,
+        IConfiguration configuration)
     {
         _benchmarkLoader = benchmarkLoader;
         _queryPlanService = queryPlanService;
@@ -29,6 +27,7 @@ public sealed class EvalRunner
         _regressionComparer = regressionComparer;
         _promptStore = promptStore;
         _evalRepository = evalRepository;
+        _configuration = configuration;
     }
 
     public async Task<(EvalRun Run, RegressionComparisonResult Comparison)> RunAsync(CancellationToken cancellationToken)
@@ -108,7 +107,8 @@ public sealed class EvalRunner
         var completedAt = DateTimeOffset.UtcNow;
         var averageScore = _scoringService.Aggregate(results);
         var summary = _scoringService.BuildSummary(results);
-        var plannerPrompt = _promptStore.GetVersionedPrompt("planner", "v1");
+        var plannerPromptVersion = _configuration["GROUNDED_PLANNER_PROMPT_VERSION"] ?? "v2";
+        var plannerPrompt = _promptStore.GetVersionedPrompt("planner", plannerPromptVersion);
         var prompt = _promptStore.GetVersionedPrompt("answer-synthesizer", "v1");
         var run = new EvalRun(
             Guid.NewGuid().ToString("D"),

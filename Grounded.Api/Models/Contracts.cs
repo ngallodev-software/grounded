@@ -10,7 +10,9 @@ public sealed record QueryPlan(
     string? TimeGrain,
     SortSpec Sort,
     int? Limit,
-    bool UsePriorState);
+    bool UsePriorState,
+    string? ResolvedFrom = null,
+    decimal? Confidence = null);
 
 public sealed record FilterSpec(
     string Field,
