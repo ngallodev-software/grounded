@@ -1,0 +1,639 @@
+openapi: 3.1.0
+
+info:
+  title: Grounded Analytics API
+  version: 1.0.0
+  description: |
+    Fixed-scope e-commerce analytics API.
+
+    Converts natural-language questions into validated, parameterized SQL via a
+    structured `QueryPlan` — no LLM-generated SQL ever reaches the database.
+
+    **Pipeline:**
+    ```
+    Question → LLM Planner → QueryPlan → Validator → Compiler → SQL Safety Guard → Postgres → Synthesizer → Answer
+    ```
+
+    **Key design properties:**
+    - LLM outputs are structured intent, not SQL
+    - Every field is allow-listed before compilation
+    - All user-influenced values reach Postgres as Npgsql parameters only
+    - Synthesis is grounded against actual result rows
+
+servers:
+  - url: http://localhost:5252
+    description: Local development
+
+tags:
+  - name: Analytics
+    description: Natural-language query execution and direct QueryPlan execution
+  - name: Eval
+    description: Benchmark evaluation and regression comparison
+
+paths:
+  /analytics/query:
+    post:
+      operationId: executeQuestion
+      tags: [Analytics]
+      summary: Ask a natural-language analytics question
+      description: |
+        The question is routed through the full pipeline: LLM planner → QueryPlan validator →
+        SQL compiler → safety guard → Postgres execution → LLM synthesizer → grounded answer.
+
+        Conversation context is maintained server-side via `conversationId`. Passing the same ID
+        across calls allows follow-up question resolution.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteAnalyticsQuestionRequest'
+            examples:
+              aggregate:
+                summary: Total revenue last month
+                value:
+                  question: "What was total revenue last month?"
+                  conversationId: "session-abc123"
+              ranking:
+                summary: Top 5 products by units sold
+                value:
+                  question: "Top 5 products by units sold this year"
+                  conversationId: "session-abc123"
+      responses:
+        '200':
+          description: Query executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteQueryPlanResponse'
+        '400':
+          description: Invalid request (missing or malformed question)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteQueryPlanResponse'
+        '422':
+          description: Business validation failure (unsupported metric, invalid filter, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteQueryPlanResponse'
+        '500':
+          description: Unexpected server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteQueryPlanResponse'
+
+  /analytics/query-plan:
+    post:
+      operationId: executeQueryPlan
+      tags: [Analytics]
+      summary: Execute a pre-built QueryPlan directly
+      description: |
+        Bypasses the LLM planner. The supplied `QueryPlan` is validated, compiled to parameterized
+        SQL, executed, and synthesized. Use this endpoint for deterministic integration tests or
+        when the caller constructs the plan programmatically.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteQueryPlanRequest'
+            examples:
+              aggregate:
+                summary: Aggregate revenue last 30 days
+                value:
+                  queryPlan:
+                    version: "1.0"
+                    questionType: aggregate
+                    metric: revenue
+                    dimension: null
+                    filters: []
+                    timeRange:
+                      preset: last_30_days
+                      startDate: null
+                      endDate: null
+                    timeGrain: null
+                    sort:
+                      by: metric
+                      direction: desc
+                    limit: null
+                    usePriorState: false
+                  userQuestion: "What was total revenue last month?"
+              ranking:
+                summary: Top 5 products by revenue
+                value:
+                  queryPlan:
+                    version: "1.0"
+                    questionType: ranking
+                    metric: revenue
+                    dimension: product_name
+                    filters: []
+                    timeRange:
+                      preset: last_30_days
+                      startDate: null
+                      endDate: null
+                    timeGrain: null
+                    sort:
+                      by: metric
+                      direction: desc
+                    limit: 5
+                    usePriorState: false
+                  userQuestion: "Which products generated the most revenue this month?"
+      responses:
+        '200':
+          description: QueryPlan executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteQueryPlanResponse'
+        '400':
+          description: Invalid request (missing queryPlan or userQuestion)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteQueryPlanResponse'
+        '422':
+          description: Business validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteQueryPlanResponse'
+        '500':
+          description: Unexpected server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteQueryPlanResponse'
+
+  /analytics/eval:
+    post:
+      operationId: runEval
+      tags: [Eval]
+      summary: Run the full benchmark eval suite
+      description: |
+        Executes all cases in `eval/benchmark_cases.jsonl` through the live pipeline.
+        Returns per-case scores across three dimensions (execution success, structural
+        correctness, answer grounding) plus a regression comparison against the previous run.
+      responses:
+        '200':
+          description: Eval completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvalResponse'
+        '500':
+          description: Unexpected server error
+
+components:
+  schemas:
+
+    # -------------------------------------------------------------------------
+    # Request bodies
+    # -------------------------------------------------------------------------
+
+    ExecuteAnalyticsQuestionRequest:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Natural-language analytics question
+          example: "Which products generated the most revenue last month?"
+        conversationId:
+          type: [string, "null"]
+          maxLength: 128
+          description: |
+            Opaque session identifier for conversation continuity. Pass the same value
+            across follow-up questions to enable prior-state resolution.
+          example: "session-abc123"
+
+    ExecuteQueryPlanRequest:
+      type: object
+      required: [queryPlan, userQuestion]
+      properties:
+        queryPlan:
+          $ref: '#/components/schemas/QueryPlan'
+        userQuestion:
+          type: string
+          description: Original natural-language question (used for synthesis context)
+          example: "Which products generated the most revenue this month?"
+
+    # -------------------------------------------------------------------------
+    # QueryPlan
+    # -------------------------------------------------------------------------
+
+    QueryPlan:
+      type: object
+      required: [version, questionType, metric, dimension, filters, timeRange, timeGrain, sort, limit, usePriorState]
+      description: |
+        Structured analytics intent produced by the LLM planner. All fields are validated
+        against allow-lists before compilation. The schema enforces shape; `QueryPlanValidator`
+        enforces business rules.
+      properties:
+        version:
+          type: string
+          enum: ["1.0"]
+          description: Contract version — always "1.0"
+        questionType:
+          type: string
+          enum: [aggregate, grouped_breakdown, ranking, time_series]
+          description: |
+            - `aggregate`: single scalar metric, no dimension or time grain
+            - `grouped_breakdown`: metric grouped by one dimension
+            - `ranking`: metric ranked by dimension with explicit limit
+            - `time_series`: metric over time using a time grain
+        metric:
+          type: string
+          description: |
+            Canonical metric name. Allowed values: `revenue`, `order_count`, `units_sold`,
+            `average_order_value`, `new_customer_count`.
+          example: revenue
+        dimension:
+          type: [string, "null"]
+          description: |
+            Grouping/ranking dimension. Required for `grouped_breakdown` and `ranking`,
+            null for `aggregate` and `time_series`.
+          example: product_name
+        filters:
+          type: array
+          maxItems: 8
+          items:
+            $ref: '#/components/schemas/FilterSpec'
+          description: Optional filters applied before metric computation
+        timeRange:
+          $ref: '#/components/schemas/TimeRangeSpec'
+        timeGrain:
+          type: [string, "null"]
+          enum: [day, week, month, quarter, null]
+          description: Required for `time_series`, null for all other question types
+        sort:
+          $ref: '#/components/schemas/SortSpec'
+        limit:
+          type: [integer, "null"]
+          minimum: 1
+          maximum: 50
+          description: Required for `ranking` (1–50), null for all other question types
+        usePriorState:
+          type: boolean
+          description: Always false in the current implementation
+
+    FilterSpec:
+      type: object
+      required: [field, operator, values]
+      properties:
+        field:
+          type: string
+          description: |
+            Allow-listed filter field. Supported: `customer_region`, `customer_segment`,
+            `acquisition_channel`, `product_category`, `product_subcategory`, `product_name`,
+            `sales_channel`, `shipping_region`, `customer_type`
+          example: product_category
+        operator:
+          type: string
+          enum: [eq, in]
+          description: "`eq` for single value, `in` for multi-value"
+        values:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            type: string
+          description: Filter values. `eq` requires exactly 1; `in` allows 1–20.
+          example: ["Electronics"]
+
+    TimeRangeSpec:
+      type: object
+      required: [preset, startDate, endDate]
+      properties:
+        preset:
+          type: string
+          enum:
+            - last_7_days
+            - last_30_days
+            - last_90_days
+            - last_6_months
+            - last_12_months
+            - month_to_date
+            - quarter_to_date
+            - year_to_date
+            - last_month
+            - last_quarter
+            - last_year
+            - all_time
+            - custom_range
+          description: |
+            Named time range preset. Use `custom_range` with explicit `startDate`/`endDate`.
+            All other presets require `startDate` and `endDate` to be null.
+        startDate:
+          type: [string, "null"]
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Required when `preset=custom_range`, null otherwise
+          example: "2025-01-01"
+        endDate:
+          type: [string, "null"]
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Required when `preset=custom_range`, null otherwise
+          example: "2025-03-31"
+
+    SortSpec:
+      type: object
+      required: [by, direction]
+      properties:
+        by:
+          type: string
+          enum: [metric, dimension]
+        direction:
+          type: string
+          enum: [asc, desc]
+
+    # -------------------------------------------------------------------------
+    # Response
+    # -------------------------------------------------------------------------
+
+    ExecuteQueryPlanResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [success, partial_success, error]
+          description: |
+            - `success`: query executed and answer synthesized
+            - `partial_success`: query executed but synthesis failed
+            - `error`: validation or execution failure
+        rows:
+          type: [array, "null"]
+          items:
+            type: object
+            additionalProperties: true
+          description: Result rows from Postgres. Keys are column names; values are scalars.
+        metadata:
+          oneOf:
+            - $ref: '#/components/schemas/QueryExecutionMetadata'
+            - type: "null"
+        errors:
+          type: [array, "null"]
+          items:
+            $ref: '#/components/schemas/ValidationErrorDto'
+        failureCategory:
+          type: [string, "null"]
+          description: Machine-readable failure category when status is not `success`
+          example: invalid_metric
+        answer:
+          oneOf:
+            - $ref: '#/components/schemas/AnswerDto'
+            - type: "null"
+        trace:
+          oneOf:
+            - $ref: '#/components/schemas/QueryExecutionTrace'
+            - type: "null"
+
+    QueryExecutionMetadata:
+      type: object
+      required: [compiledSql, parameters, rowCount, durationMs, appliedRowLimit]
+      properties:
+        compiledSql:
+          type: string
+          description: Parameterized SQL that was executed (for audit/debugging)
+        parameters:
+          type: object
+          additionalProperties: true
+          description: Bound parameter values keyed by parameter name
+        rowCount:
+          type: integer
+        durationMs:
+          type: integer
+          description: Total query execution time in milliseconds
+        appliedRowLimit:
+          type: integer
+        timeRangeStartUtc:
+          type: [string, "null"]
+          format: date-time
+        timeRangeEndExclusiveUtc:
+          type: [string, "null"]
+          format: date-time
+
+    AnswerDto:
+      type: object
+      required: [summary, keyPoints, tableIncluded]
+      properties:
+        summary:
+          type: string
+          description: Grounded natural-language answer. Contains at least one value from result rows.
+        keyPoints:
+          type: array
+          items:
+            type: string
+          description: Supporting bullet points derived from the result data
+        tableIncluded:
+          type: boolean
+          description: Whether the synthesizer included tabular data in the answer
+
+    QueryExecutionTrace:
+      type: object
+      required: [requestId, traceId, plannerStatus, synthesisStatus, finalStatus, compiledSql]
+      properties:
+        requestId:
+          type: string
+          description: ASP.NET Core trace identifier
+        traceId:
+          type: string
+          format: uuid
+          description: Unique trace identifier for this invocation
+        queryPlan:
+          oneOf:
+            - $ref: '#/components/schemas/QueryPlan'
+            - type: "null"
+        planner:
+          oneOf:
+            - $ref: '#/components/schemas/PlannerTrace'
+            - type: "null"
+        metadata:
+          oneOf:
+            - $ref: '#/components/schemas/QueryExecutionMetadata'
+            - type: "null"
+        compiledSql:
+          type: string
+        answer:
+          oneOf:
+            - $ref: '#/components/schemas/AnswerDto'
+            - type: "null"
+        plannerStatus:
+          type: string
+          enum: [not_requested, completed, failed]
+        synthesisStatus:
+          type: string
+          enum: [completed, failed]
+        finalStatus:
+          type: string
+          enum: [success, partial_success, error]
+        failureCategory:
+          type: [string, "null"]
+        synthesisFailed:
+          type: boolean
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    PlannerTrace:
+      type: object
+      properties:
+        promptKey:
+          type: string
+        promptVersion:
+          type: string
+        provider:
+          type: string
+        modelName:
+          type: string
+        requestedAt:
+          type: string
+          format: date-time
+        respondedAt:
+          type: string
+          format: date-time
+        latencyMs:
+          type: integer
+        tokensIn:
+          type: integer
+        tokensOut:
+          type: integer
+        parseSucceeded:
+          type: boolean
+        repairAttempted:
+          type: boolean
+        repairSucceeded:
+          type: boolean
+        failureCategory:
+          type: [string, "null"]
+        failureMessage:
+          type: [string, "null"]
+
+    ValidationErrorDto:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          example: invalid_metric
+        message:
+          type: string
+          description: Human-readable error description
+          example: "metric 'gross_margin' is not supported"
+
+    # -------------------------------------------------------------------------
+    # Eval
+    # -------------------------------------------------------------------------
+
+    EvalResponse:
+      type: object
+      required: [run, comparison]
+      properties:
+        run:
+          $ref: '#/components/schemas/EvalRun'
+        comparison:
+          $ref: '#/components/schemas/RegressionComparisonResult'
+
+    EvalRun:
+      type: object
+      required: [runId, startedAt, completedAt, plannerPromptVersion, synthesizerPromptVersion, score, summary, caseResults]
+      properties:
+        runId:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        plannerPromptVersion:
+          type: string
+        synthesizerPromptVersion:
+          type: string
+        score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Aggregate weighted score across all benchmark cases
+        summary:
+          $ref: '#/components/schemas/EvalRunSummary'
+        caseResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/BenchmarkCaseResult'
+
+    EvalRunSummary:
+      type: object
+      required: [plannerValidityRate, executionSuccessRate, groundingRate, averageLatencyMs, averageTokensIn, averageTokensOut, failureCounts]
+      properties:
+        plannerValidityRate:
+          type: number
+          format: float
+        executionSuccessRate:
+          type: number
+          format: float
+        groundingRate:
+          type: number
+          format: float
+        averageLatencyMs:
+          type: number
+          format: float
+        averageTokensIn:
+          type: number
+          format: float
+        averageTokensOut:
+          type: number
+          format: float
+        failureCounts:
+          type: object
+          additionalProperties:
+            type: integer
+
+    BenchmarkCaseResult:
+      type: object
+      required: [caseId, executionSuccess, structuralCorrectness, answerGrounding, score, passed]
+      properties:
+        caseId:
+          type: string
+        executionSuccess:
+          type: boolean
+        structuralCorrectness:
+          type: boolean
+        answerGrounding:
+          type: boolean
+        score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        passed:
+          type: boolean
+        notes:
+          type: [string, "null"]
+
+    RegressionComparisonResult:
+      type: object
+      required: [hasRegression, scoreDelta, notes]
+      properties:
+        hasRegression:
+          type: boolean
+          description: True if any case that passed on the previous run now fails
+        scoreDelta:
+          type: number
+          format: float
+          description: Score change relative to previous run (positive = improvement)
+        notes:
+          type: array
+          items:
+            type: string
+          description: Per-case regression notes

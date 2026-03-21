@@ -19,6 +19,12 @@ public sealed class AnalyticsController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>Ask a natural-language analytics question.</summary>
+    /// <remarks>
+    /// The question is converted to a structured QueryPlan by the LLM planner, validated,
+    /// compiled to parameterized SQL, executed against Postgres, and synthesized into a
+    /// grounded natural-language answer. Conversation context is maintained via conversationId.
+    /// </remarks>
     [HttpPost("query")]
     [ProducesResponseType(typeof(ExecuteQueryPlanResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ExecuteQueryPlanResponse), StatusCodes.Status400BadRequest)]
@@ -66,6 +72,11 @@ public sealed class AnalyticsController : ControllerBase
         }
     }
 
+    /// <summary>Run the full benchmark eval suite.</summary>
+    /// <remarks>
+    /// Executes all cases in benchmark_cases.jsonl through the live pipeline and returns
+    /// per-case scores, aggregate metrics, and a regression comparison against the previous run.
+    /// </remarks>
     [HttpPost("eval")]
     [ProducesResponseType(typeof(EvalResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -83,6 +94,12 @@ public sealed class AnalyticsController : ControllerBase
         }
     }
 
+    /// <summary>Execute a pre-built QueryPlan directly.</summary>
+    /// <remarks>
+    /// Bypasses the LLM planner. The supplied QueryPlan is validated, compiled to parameterized
+    /// SQL, executed, and synthesized. Use this endpoint for deterministic integration tests or
+    /// when the caller constructs the plan programmatically.
+    /// </remarks>
     [HttpPost("query-plan")]
     [ProducesResponseType(typeof(ExecuteQueryPlanResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ExecuteQueryPlanResponse), StatusCodes.Status400BadRequest)]

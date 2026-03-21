@@ -1,10 +1,25 @@
 using Grounded.Api.Services;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, ct) =>
+    {
+        document.Info = new()
+        {
+            Title = "Grounded Analytics API",
+            Version = "1.0.0",
+            Description = "Fixed-scope e-commerce analytics API. Converts natural-language questions into validated, parameterized SQL via a structured QueryPlan — no LLM-generated SQL ever reaches the database.",
+            Contact = new() { Name = "Grounded" },
+        };
+        return Task.CompletedTask;
+    });
+});
 
 builder.Services.AddSingleton<IUtcClock, SystemUtcClock>();
 builder.Services.AddSingleton<SqlFragmentRegistry>();
@@ -51,6 +66,12 @@ builder.Services.AddScoped<AnalyticsQueryPlanService>();
 
 var app = builder.Build();
 
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
+{
+    options.Title = "Grounded Analytics API";
+    options.Theme = ScalarTheme.DeepSpace;
+});
 app.MapControllers();
 
 app.Run();
