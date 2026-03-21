@@ -184,14 +184,22 @@ pipeline {
     }
 }
 
-// Send a notification to ntfy.sh
+// Send a notification to ntfy.sh — uses env vars to avoid shell quoting issues
 def ntfyNotify(String topic, String title, String message, String tags, String priority) {
-    sh """
-        curl -sf \
-            -H 'Title: ${title}' \
-            -H 'Priority: ${priority}' \
-            -H 'Tags: ${tags}' \
-            -d '${message}' \
-            https://ntfy.sh/${topic} || true
-    """
+    withEnv([
+        "NTFY_TITLE=${title}",
+        "NTFY_MESSAGE=${message}",
+        "NTFY_TAGS=${tags}",
+        "NTFY_PRIORITY=${priority}",
+        "NTFY_TOPIC=${topic}"
+    ]) {
+        sh '''
+            curl -sf \
+                -H "Title: ${NTFY_TITLE}" \
+                -H "Priority: ${NTFY_PRIORITY}" \
+                -H "Tags: ${NTFY_TAGS}" \
+                --data-raw "${NTFY_MESSAGE}" \
+                "https://ntfy.sh/${NTFY_TOPIC}" || true
+        '''
+    }
 }
