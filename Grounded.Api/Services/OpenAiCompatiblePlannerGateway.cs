@@ -39,7 +39,10 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
                 prompt.Prompt.Version,
                 prompt.Prompt.Checksum,
                 "GROUNDED_PLANNER_MODEL",
-                "GROUNDED_PLANNER_API_KEY"),
+                "GROUNDED_PLANNER_API_KEY",
+                UseStructuredOutput: true,
+                StructuredOutputSchemaJson: QueryPlanSchema.Json,
+                StructuredOutputSchemaName: QueryPlanSchema.Name),
             cancellationToken);
 
         if (!invocation.IsSuccess || invocation.Response is null)

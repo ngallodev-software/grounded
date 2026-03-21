@@ -106,11 +106,25 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
             ? RequireSetting("GROUNDED_PLANNER_API_KEY")
             : RequireSetting(request.ApiKeyEnvironmentVariable);
         message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+        object responseFormat = request.UseStructuredOutput && request.StructuredOutputSchemaJson is not null
+            ? new
+            {
+                type = "json_schema",
+                json_schema = new
+                {
+                    name = request.StructuredOutputSchemaName ?? "response",
+                    strict = true,
+                    schema = JsonSerializer.Deserialize<object>(request.StructuredOutputSchemaJson)
+                }
+            }
+            : new { type = "json_object" };
+
         message.Content = new StringContent(JsonSerializer.Serialize(new
         {
             model,
             temperature = 0,
-            response_format = new { type = "json_object" },
+            response_format = responseFormat,
             messages = new[]
             {
                 new { role = "system", content = request.PromptText }

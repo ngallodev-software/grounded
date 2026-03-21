@@ -25,7 +25,10 @@ public sealed record ModelRequest(
     string PromptVersion,
     string PromptChecksum,
     string ModelEnvironmentVariable,
-    string ApiKeyEnvironmentVariable);
+    string ApiKeyEnvironmentVariable,
+    bool UseStructuredOutput = false,
+    string? StructuredOutputSchemaJson = null,
+    string? StructuredOutputSchemaName = null);
 
 public sealed record ModelUsage(
     int TokensIn,
