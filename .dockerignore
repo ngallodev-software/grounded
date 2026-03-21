@@ -7,3 +7,4 @@ scripts/
 grounded-ui/
 database/
 *.md
+Grounded.Api/appsettings.Local.json

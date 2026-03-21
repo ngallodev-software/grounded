@@ -50,8 +50,11 @@ public sealed class PlannerContextBuilder
                 "Show gross margin by channel last month.",
                 new QueryPlan("1.0", "aggregate", null, [], "__unsupported__", new("last_30_days", null, null), null, new("metric", "desc"), null, false)),
             new PlannerExample(
-                "Show sales by region.",
-                new QueryPlan("1.0", "aggregate", null, [], "__unsupported__", new("last_30_days", null, null), null, new("metric", "desc"), null, false)),
+                "Revenue by shipping region last year.",
+                new QueryPlan("1.0", "grouped_breakdown", "shipping_region", [], "revenue", new("last_year", null, null), null, new("metric", "desc"), null, false)),
+            new PlannerExample(
+                "Revenue by customer region last quarter.",
+                new QueryPlan("1.0", "grouped_breakdown", "customer_region", [], "revenue", new("last_quarter", null, null), null, new("metric", "desc"), null, false)),
             new PlannerExample(
                 "SELECT product_name, SUM(quantity) FROM order_items GROUP BY product_name;",
                 new QueryPlan("1.0", "aggregate", null, [], "__unsupported__", new("last_30_days", null, null), null, new("metric", "desc"), null, false)),
@@ -63,7 +66,16 @@ public sealed class PlannerContextBuilder
                 new QueryPlan("1.0", "aggregate", null, [], "__unsupported__", new("last_30_days", null, null), null, new("metric", "desc"), null, false)),
             new PlannerExample(
                 "Show revenue by product category where sales channel is Retail.",
-                new QueryPlan("1.0", "aggregate", null, [], "__unsupported__", new("last_30_days", null, null), null, new("metric", "desc"), null, false))
+                new QueryPlan("1.0", "aggregate", null, [], "__unsupported__", new("last_30_days", null, null), null, new("metric", "desc"), null, false)),
+            new PlannerExample(
+                "Top 5 customers by order count last year.",
+                new QueryPlan("1.0", "ranking", "customer_name", [], "order_count", new("last_year", null, null), null, new("metric", "desc"), 5, false)),
+            new PlannerExample(
+                "What was total revenue in 2024?",
+                new QueryPlan("1.0", "aggregate", null, [], "revenue", new("custom_range", "2024-01-01", "2024-12-31"), null, new("metric", "desc"), null, false)),
+            new PlannerExample(
+                "Show units sold by category for 2025.",
+                new QueryPlan("1.0", "grouped_breakdown", "product_category", [], "units_sold", new("custom_range", "2025-01-01", "2025-12-31"), null, new("metric", "desc"), null, false))
         };
 
         return new PlannerContext(

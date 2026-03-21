@@ -57,7 +57,8 @@ public sealed class SqlFragmentRegistry
         "product_subcategory",
         "product_name",
         "sales_channel",
-        "shipping_region"
+        "shipping_region",
+        "customer_name"
     };
 
     public static readonly IReadOnlySet<string> SupportedFilterFields = new HashSet<string>(StringComparer.Ordinal)
@@ -182,7 +183,8 @@ public sealed class SqlFragmentRegistry
             ["product_subcategory"] = new("p.subcategory", RequiresCustomerJoin: false, RequiresOrderItemsJoin: true, RequiresProductsJoin: true),
             ["product_name"] = new("p.product_name", RequiresCustomerJoin: false, RequiresOrderItemsJoin: true, RequiresProductsJoin: true),
             ["sales_channel"] = new("o.sales_channel", RequiresCustomerJoin: false, RequiresOrderItemsJoin: false, RequiresProductsJoin: false),
-            ["shipping_region"] = new("o.shipping_region", RequiresCustomerJoin: false, RequiresOrderItemsJoin: false, RequiresProductsJoin: false)
+            ["shipping_region"] = new("o.shipping_region", RequiresCustomerJoin: false, RequiresOrderItemsJoin: false, RequiresProductsJoin: false),
+            ["customer_name"] = new("c.customer_name", RequiresCustomerJoin: true, RequiresOrderItemsJoin: false, RequiresProductsJoin: false)
         });
 
     private readonly IReadOnlyDictionary<string, FilterSqlSpec> _filters =

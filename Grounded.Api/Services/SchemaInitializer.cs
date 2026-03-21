@@ -1,3 +1,5 @@
+using Npgsql;
+
 namespace Grounded.Api.Services;
 
 public sealed class SchemaInitializer : IHostedService
@@ -15,9 +17,31 @@ public sealed class SchemaInitializer : IHostedService
         var factory = scope.ServiceProvider.GetRequiredService<INpgsqlConnectionFactory>();
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         var appSchema = DatabaseSchemaSettings.GetAppSchema(configuration);
-        await using var connection = factory.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
+
+        // Retry up to 10 times (2 s apart) to tolerate container startup ordering.
+        NpgsqlConnection? connection = null;
+        for (var attempt = 1; attempt <= 10; attempt++)
+        {
+            try
+            {
+                connection = factory.CreateConnection();
+                await connection.OpenAsync(cancellationToken);
+                break;
+            }
+            catch (Exception) when (attempt < 10)
+            {
+                if (connection is not null)
+                {
+                    await connection.DisposeAsync();
+                    connection = null;
+                }
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            }
+        }
+
+        await using (connection)
+        {
+        await using var command = connection!.CreateCommand();
         command.CommandText =
             $"""
             CREATE SCHEMA IF NOT EXISTS "{appSchema}";
@@ -62,6 +86,7 @@ public sealed class SchemaInitializer : IHostedService
             );
             """;
         await command.ExecuteNonQueryAsync(cancellationToken);
+        } // end await using connection
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

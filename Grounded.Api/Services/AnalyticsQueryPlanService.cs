@@ -129,9 +129,11 @@ public sealed class AnalyticsQueryPlanService
         var validationResult = _validator.Validate(queryPlan);
         if (!validationResult.IsValid)
         {
-            var failureCategory = validationResult.Errors.Any(static error => error.Code == "unsupported_question_type")
-                ? FailureCategories.UnsupportedRequest
-                : FailureCategories.PlannerValidationFailure;
+            var failureCategory =
+                validationResult.Errors.Any(static error => error.Code == "unsupported_question_type") ||
+                (queryPlan.Metric == "__unsupported__" && validationResult.Errors.Any(static error => error.Code == "invalid_metric"))
+                    ? FailureCategories.UnsupportedRequest
+                    : FailureCategories.PlannerValidationFailure;
             var traceWithFailure = plannerTrace is null
                 ? null
                 : plannerTrace with

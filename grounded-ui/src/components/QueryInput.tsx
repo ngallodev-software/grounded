@@ -5,9 +5,11 @@ import { cn } from '@/lib/utils'
 interface QueryInputProps {
   onSubmit: (question: string) => void
   isLoading: boolean
+  prefill?: string | null
+  onPrefillConsumed?: () => void
 }
 
-export function QueryInput({ onSubmit, isLoading }: QueryInputProps) {
+export function QueryInput({ onSubmit, isLoading, prefill, onPrefillConsumed }: QueryInputProps) {
   const [value, setValue] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -17,6 +19,14 @@ export function QueryInput({ onSubmit, isLoading }: QueryInputProps) {
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
     }
   }, [value])
+
+  useEffect(() => {
+    if (prefill) {
+      setValue(prefill)
+      onPrefillConsumed?.()
+      textareaRef.current?.focus()
+    }
+  }, [prefill, onPrefillConsumed])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Grounded.Api.Models;
+using NpgsqlTypes;
 
 namespace Grounded.Api.Services;
 
@@ -229,8 +230,8 @@ public sealed class NpgsqlConversationStateRepository : IConversationStateReposi
         command.Parameters.AddWithValue("question_type", snapshot.QuestionType);
         command.Parameters.AddWithValue("metric", snapshot.Metric);
         command.Parameters.AddWithValue("dimension", (object?)snapshot.Dimension ?? DBNull.Value);
-        command.Parameters.AddWithValue("filters_json", JsonSerializer.Serialize(snapshot.Filters, SerializerOptions));
-        command.Parameters.AddWithValue("time_range_json", JsonSerializer.Serialize(snapshot.TimeRange, SerializerOptions));
+        command.Parameters.Add("filters_json", NpgsqlDbType.Jsonb).Value = JsonSerializer.Serialize(snapshot.Filters, SerializerOptions);
+        command.Parameters.Add("time_range_json", NpgsqlDbType.Jsonb).Value = JsonSerializer.Serialize(snapshot.TimeRange, SerializerOptions);
         command.Parameters.AddWithValue("updated_at_utc", DateTime.UtcNow);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

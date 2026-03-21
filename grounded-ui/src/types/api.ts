@@ -15,16 +15,39 @@ export interface QueryAnswer {
   tableIncluded: boolean
 }
 
+export interface LlmStageTrace {
+  provider: string
+  modelName: string
+  latencyMs?: number
+  tokensIn: number
+  tokensOut: number
+  failureCategory: string
+  // planner-specific
+  promptKey?: string
+  promptVersion?: string
+  parseSucceeded?: boolean
+  repairAttempted?: boolean
+  failureMessage?: string | null
+  // synthesizer-specific
+  errorMessage?: string | null
+}
+
 export interface QueryTrace {
   requestId: string
   traceId: string
   plannerStatus: string
+  synthesisStatus?: string
+  finalStatus?: string
   failureCategory?: string
   durationMs?: number
   llmLatencyMs?: number
   rowCount?: number
   compiledSql?: string
   queryPlan?: unknown
+  planner?: LlmStageTrace
+  synthesizer?: LlmStageTrace
+  startedAt?: string
+  completedAt?: string
 }
 
 export interface QuerySuccessResponse {

@@ -21,11 +21,13 @@ export default function App() {
   const { unlocked, unlock } = useAuth()
   const { mutate, isPending, data } = useAnalyticsQuery()
   const [lastQuestion, setLastQuestion] = useState<string | null>(null)
+  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null)
   const resultRef = useRef<HTMLDivElement>(null)
 
   const handleSubmit = useCallback(
     (question: string) => {
       setLastQuestion(question)
+      setPendingQuestion(null)
       mutate(
         { question, conversationId: SESSION_CONVERSATION_ID },
         {
@@ -75,7 +77,12 @@ export default function App() {
       {/* Query input */}
       <div className="px-6 py-5 border-b border-zinc-800/40 shrink-0">
         <div className="max-w-4xl mx-auto">
-          <QueryInput onSubmit={handleSubmit} isLoading={isPending} />
+          <QueryInput
+            onSubmit={handleSubmit}
+            isLoading={isPending}
+            prefill={pendingQuestion}
+            onPrefillConsumed={() => setPendingQuestion(null)}
+          />
         </div>
       </div>
 
@@ -84,7 +91,11 @@ export default function App() {
         {/* Left: Answer + Table */}
         <div className="flex-1 min-w-0 border-b lg:border-b-0 lg:border-r border-zinc-800/60 overflow-auto">
           <div className="h-full">
-            <AnswerPanel response={response ?? null} isLoading={isPending} />
+            <AnswerPanel
+              response={response ?? null}
+              isLoading={isPending}
+              onSelectQuestion={setPendingQuestion}
+            />
           </div>
         </div>
 

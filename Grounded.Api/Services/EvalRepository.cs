@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Grounded.Api.Models;
+using NpgsqlTypes;
 
 namespace Grounded.Api.Services;
 
@@ -56,8 +57,8 @@ public sealed class NpgsqlEvalRepository : IEvalRepository
         command.Parameters.AddWithValue("planner_prompt_version", run.PlannerPromptVersion);
         command.Parameters.AddWithValue("synthesizer_prompt_version", run.SynthesizerPromptVersion);
         command.Parameters.AddWithValue("score", run.Score);
-        command.Parameters.AddWithValue("case_results_json", JsonSerializer.Serialize(run.CaseResults, SerializerOptions));
-        command.Parameters.AddWithValue("comparison_json", JsonSerializer.Serialize(run.Comparison, SerializerOptions));
+        command.Parameters.Add("case_results_json", NpgsqlDbType.Jsonb).Value = JsonSerializer.Serialize(run.CaseResults, SerializerOptions);
+        command.Parameters.Add("comparison_json", NpgsqlDbType.Jsonb).Value = JsonSerializer.Serialize(run.Comparison, SerializerOptions);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 

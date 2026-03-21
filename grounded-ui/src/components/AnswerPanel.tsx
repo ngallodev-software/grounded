@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { QuerySuccessResponse, QueryErrorResponse } from '@/types/api'
@@ -5,9 +6,96 @@ import type { QuerySuccessResponse, QueryErrorResponse } from '@/types/api'
 interface AnswerPanelProps {
   response: QuerySuccessResponse | QueryErrorResponse | null
   isLoading: boolean
+  onSelectQuestion?: (question: string) => void
 }
 
-export function AnswerPanel({ response, isLoading }: AnswerPanelProps) {
+const SUGGESTED_QUESTIONS = [
+  'Total revenue last month',
+  'Revenue by category last quarter',
+  'Top 10 products by units sold this year',
+  'Monthly revenue for last 6 months',
+  'Average order value in 2024',
+  'Revenue by shipping region last year',
+  'Units sold by sales channel last 90 days',
+  'Top 5 customers by order count',
+]
+
+const SCHEMA_SECTIONS = [
+  {
+    label: 'Metrics',
+    color: 'text-amber-400',
+    items: [
+      { name: 'revenue', desc: 'sum of (quantity × unit_price − discount)' },
+      { name: 'units_sold', desc: 'total quantity across completed orders' },
+      { name: 'order_count', desc: 'number of orders' },
+      { name: 'avg_order_value', desc: 'average revenue per order' },
+    ],
+  },
+  {
+    label: 'Dimensions',
+    color: 'text-emerald-400',
+    items: [
+      { name: 'product_category', desc: 'Electronics · Home · Office · Fitness · Accessories' },
+      { name: 'product_name', desc: 'individual product' },
+      { name: 'customer_segment', desc: 'Consumer · SMB · Enterprise' },
+      { name: 'customer_region', desc: 'West · East · South · Central' },
+      { name: 'customer_name', desc: 'individual customer (use for ranking)' },
+      { name: 'sales_channel', desc: 'Web · Mobile · Marketplace' },
+      { name: 'acquisition_channel', desc: 'Organic · Paid Search · Email · Affiliate · Social' },
+    ],
+  },
+  {
+    label: 'Time presets',
+    color: 'text-zinc-400',
+    items: [
+      { name: 'last 7 / 30 / 90 days', desc: '' },
+      { name: 'last month / quarter / year', desc: '' },
+      { name: 'month / quarter / year to date', desc: '' },
+      { name: 'specific year', desc: 'e.g. "in 2024" or "for 2025"' },
+      { name: 'all time', desc: '' },
+    ],
+  },
+  {
+    label: 'Filters',
+    color: 'text-zinc-400',
+    items: [
+      { name: 'status', desc: 'Completed · Cancelled · Refunded' },
+      { name: 'segment / region / channel', desc: 'combine with any query' },
+    ],
+  },
+]
+
+function SchemaPanel() {
+  return (
+    <div className="border border-zinc-800/60 bg-zinc-900/40 divide-y divide-zinc-800/40">
+      <div className="px-4 py-2.5 flex items-center gap-2">
+        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Data schema</span>
+        <span className="text-[10px] font-mono text-zinc-700">— what you can ask about</span>
+      </div>
+      {SCHEMA_SECTIONS.map((section) => (
+        <div key={section.label} className="px-4 py-3 space-y-1.5">
+          <span className={`text-[10px] font-mono uppercase tracking-widest ${section.color}`}>
+            {section.label}
+          </span>
+          <div className="space-y-1 mt-1">
+            {section.items.map((item) => (
+              <div key={item.name} className="flex items-baseline gap-2">
+                <span className="text-xs font-mono text-zinc-300 shrink-0">{item.name}</span>
+                {item.desc && (
+                  <span className="text-[11px] font-mono text-zinc-600 leading-tight">{item.desc}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function AnswerPanel({ response, isLoading, onSelectQuestion }: AnswerPanelProps) {
+  const [schemaOpen, setSchemaOpen] = useState(false)
+
   if (isLoading) {
     return (
       <div className="space-y-4 p-6">
@@ -26,25 +114,49 @@ export function AnswerPanel({ response, isLoading }: AnswerPanelProps) {
 
   if (!response) {
     return (
-      <div className="flex flex-col items-center justify-center h-full py-20 text-center px-8">
-        <div className="w-12 h-12 mb-6 rounded-full border border-zinc-800 flex items-center justify-center">
-          <span className="text-zinc-600 text-lg font-mono">?</span>
+      <div className="flex flex-col items-center py-12 px-8 gap-6">
+        {/* Schema panel — collapsible above the ? */}
+        <div className="w-full max-w-sm space-y-2">
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              schemaOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <SchemaPanel />
+          </div>
+
+          {/* ? button */}
+          <div className="flex justify-center">
+            <button
+              onClick={() => setSchemaOpen((o) => !o)}
+              className="w-10 h-10 rounded-full border border-zinc-800 hover:border-amber-500/50 flex items-center justify-center transition-all duration-200 group"
+              aria-label={schemaOpen ? 'Hide schema' : 'Show data schema'}
+            >
+              <span
+                className={`text-base font-mono transition-colors duration-200 ${
+                  schemaOpen ? 'text-amber-400' : 'text-zinc-600 group-hover:text-zinc-400'
+                }`}
+              >
+                {schemaOpen ? '×' : '?'}
+              </span>
+            </button>
+          </div>
         </div>
-        <p className="text-zinc-600 text-sm font-mono leading-relaxed max-w-xs">
+
+        <p className="text-zinc-600 text-sm font-mono leading-relaxed text-center max-w-xs">
           Ask a natural language question about your analytics data.
         </p>
-        <div className="mt-8 flex flex-col gap-2 w-full max-w-xs">
-          {[
-            'Revenue by category last quarter',
-            'Top 10 products by units sold',
-            'Monthly revenue for last 6 months',
-          ].map((ex) => (
-            <div
-              key={ex}
-              className="text-xs font-mono text-zinc-600 border border-zinc-800/60 px-3 py-2 text-left"
+
+        {/* Suggested questions — clickable */}
+        <div className="flex flex-col gap-2 w-full max-w-sm">
+          {SUGGESTED_QUESTIONS.map((q) => (
+            <button
+              key={q}
+              onClick={() => onSelectQuestion?.(q)}
+              className="text-xs font-mono text-zinc-500 border border-zinc-800/60 px-3 py-2 text-left hover:border-amber-500/40 hover:text-zinc-300 hover:bg-zinc-900/60 transition-all duration-150"
             >
-              {ex}
-            </div>
+              {q}
+            </button>
           ))}
         </div>
       </div>
