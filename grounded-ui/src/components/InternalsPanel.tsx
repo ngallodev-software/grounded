@@ -1,6 +1,7 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { EvalPanel } from '@/components/EvalPanel'
 import type { QuerySuccessResponse, QueryErrorResponse, LlmStageTrace } from '@/types/api'
 
 interface InternalsPanelProps {
@@ -124,6 +125,7 @@ export function InternalsPanel({ response, isLoading }: InternalsPanelProps) {
         <TabsTrigger value="trace">Trace</TabsTrigger>
         <TabsTrigger value="plan">Plan</TabsTrigger>
         <TabsTrigger value="sql">SQL</TabsTrigger>
+        <TabsTrigger value="eval">Eval</TabsTrigger>
       </TabsList>
 
       <TabsContent value="trace" className="flex-1 overflow-auto">
@@ -254,6 +256,9 @@ export function InternalsPanel({ response, isLoading }: InternalsPanelProps) {
             </span>
           </div>
         )}
+      </TabsContent>
+      <TabsContent value="eval" className="flex-1 overflow-hidden">
+        <EvalPanel />
       </TabsContent>
     </Tabs>
   )
