@@ -85,7 +85,7 @@ pipeline {
                 archiveArtifacts(
                     artifacts: 'ci-artifacts/*.tar.gz',
                     allowEmptyArchive: false,
-                    fingerprint: true
+                    fingerprint: false
                 )
             }
         }
