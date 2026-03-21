@@ -4,6 +4,7 @@ using Grounded.Api.Models;
 using Grounded.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -58,7 +59,10 @@ public sealed class AnalyticsPhase5ConversationTests
     [Fact]
     public void PlannerPromptRenderer_FollowUpModeRemainsBounded()
     {
-        var renderer = new PlannerPromptRenderer(new PromptStore(), new PlannerContextBuilder(new SqlFragmentRegistry()));
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>())
+            .Build();
+        var renderer = new PlannerPromptRenderer(new PromptStore(), new PlannerContextBuilder(new SqlFragmentRegistry()), config);
         var snapshot = new ConversationStateSnapshot(
             "aggregate",
             "revenue",

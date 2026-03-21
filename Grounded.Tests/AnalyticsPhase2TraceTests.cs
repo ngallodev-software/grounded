@@ -113,7 +113,8 @@ public sealed class AnalyticsPhase2TraceTests
                 new ScoringService(),
                 new RegressionComparer(config),
                 new PromptStore(),
-                evalRepository);
+                evalRepository,
+                config);
 
             var (run, _) = await runner.RunAsync(CancellationToken.None);
 

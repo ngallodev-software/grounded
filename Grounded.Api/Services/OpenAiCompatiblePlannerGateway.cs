@@ -91,6 +91,9 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
                 [new ValidationErrorDto(parsed.FailureCategory, parsed.FailureMessage ?? "planner output could not be parsed")]);
         }
 
+        var enrichedPlan = PlannerResponseParser.EnrichFromQuestion(parsed.QueryPlan!, question);
+        parsed = parsed with { QueryPlan = enrichedPlan };
+
         _cache.Set(prompt.RenderedPrompt, rawResponse, parsed);
 
         return new PlannerGatewayResult(

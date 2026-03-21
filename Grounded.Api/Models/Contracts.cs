@@ -11,8 +11,12 @@ public sealed record QueryPlan(
     SortSpec Sort,
     int? Limit,
     bool UsePriorState,
-    string? ResolvedFrom = null,
+    ResolvedFromSpec? ResolvedFrom = null,
     decimal? Confidence = null);
+
+public sealed record ResolvedFromSpec(
+    string? Metric = null,
+    string? Dimension = null);
 
 public sealed record FilterSpec(
     string Field,
