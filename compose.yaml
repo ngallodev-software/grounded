@@ -1,4 +1,5 @@
 services:
+
   postgres:
     image: postgres:17
     container_name: grounded-postgres
@@ -17,6 +18,55 @@ services:
       retries: 10
     ports:
       - "127.0.0.1:5432:5432"
+
+  api:
+    build:
+      context: .
+      dockerfile: Grounded.Api/Dockerfile
+    container_name: grounded-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__AnalyticsDatabase: >-
+        Host=postgres;Port=5432;Database=grounded;Username=grounded;Password=${POSTGRES_PASSWORD}
+      GROUNDED_PLANNER_API_KEY: ${GROUNDED_PLANNER_API_KEY}
+      GROUNDED_PLANNER_MODEL: ${GROUNDED_PLANNER_MODEL:-gpt-4o-mini}
+      GROUNDED_PLANNER_BASE_URL: ${GROUNDED_PLANNER_BASE_URL:-https://api.openai.com/v1/}
+      GROUNDED_PLANNER_TIMEOUT_SECONDS: ${GROUNDED_PLANNER_TIMEOUT_SECONDS:-15}
+      GROUNDED_SYNTHESIS_API_KEY: ${GROUNDED_SYNTHESIS_API_KEY}
+      GROUNDED_SYNTHESIS_MODEL: ${GROUNDED_SYNTHESIS_MODEL:-gpt-4o-mini}
+      GROUNDED_REPLAY_MODE: ${GROUNDED_REPLAY_MODE:-false}
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "127.0.0.1:5252:5252"
+
+  ui:
+    build:
+      context: ./grounded-ui
+      dockerfile: Dockerfile
+      args:
+        # Empty string → relative URLs → nginx proxies /analytics to api
+        VITE_API_BASE_URL: ""
+    container_name: grounded-ui
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:5173:80"
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: grounded-cloudflared
+    restart: unless-stopped
+    depends_on:
+      - ui
+    # Routes all tunnel traffic to the nginx UI container.
+    # The UI nginx config then proxies /analytics/* to the api container.
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
 
 volumes:
   grounded_pg_data:

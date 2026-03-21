@@ -137,25 +137,57 @@ Run the full benchmark suite (`eval/benchmark_cases.jsonl`) through the live pip
 
 ---
 
-## Running locally
+## Running with Docker (recommended)
 
-**Prerequisites:** .NET 10, Docker, Python 3 (`psycopg2-binary`)
+**Prerequisites:** Docker with Compose plugin
+
+### 1. Configure `.env`
+
+```bash
+cp .env.example .env
+```
+
+Fill in:
+- `POSTGRES_PASSWORD` — any strong password
+- `GROUNDED_PLANNER_API_KEY` / `GROUNDED_SYNTHESIS_API_KEY` — OpenAI API key
+- `CLOUDFLARE_TUNNEL_TOKEN` — from `cloudflared tunnel token <tunnel-name>` (optional; omit the `cloudflared` service if not using a tunnel)
+
+### 2. Start all services
+
+```bash
+docker compose up -d
+```
+
+This starts four containers:
+| Container | Role | Exposed locally |
+|---|---|---|
+| `grounded-postgres` | PostgreSQL 17 | `127.0.0.1:5432` |
+| `grounded-api` | ASP.NET Core API | `127.0.0.1:5252` |
+| `grounded-ui` | React frontend (nginx) | `127.0.0.1:5173` |
+| `grounded-cloudflared` | Cloudflare Tunnel → UI | — |
+
+### 3. Seed the database (first run only)
+
+```bash
+pip install psycopg2-binary
+python3 scripts/seed.py --dsn "Host=127.0.0.1;Port=5432;Database=grounded;Username=grounded;Password=<POSTGRES_PASSWORD>"
+```
+
+App-owned tables (traces, eval runs, conversation state) are created automatically at API startup.
+
+---
+
+## Running locally (dev mode)
+
+**Prerequisites:** .NET 10, Docker, Node 22, Python 3 (`psycopg2-binary`)
 
 ### 1. Start the database
 
 ```bash
 cp .env.example .env          # set POSTGRES_PASSWORD
-bash scripts/db-up.sh         # starts Postgres 17 in Docker, waits for healthy
-```
-
-Seed the analytics data (~3k customers, 180 products, 18k orders):
-
-```bash
-pip install psycopg2-binary
+bash scripts/db-up.sh         # starts Postgres 17, waits for healthy
 python3 scripts/seed.py --dsn "Host=127.0.0.1;Port=5432;Database=grounded;Username=grounded;Password=<your-password>"
 ```
-
-Helper scripts: `db-down.sh`, `db-reset.sh`, `db-logs.sh`. See `database/README.md`.
 
 ### 2. Configure the API
 
@@ -169,22 +201,7 @@ Create `Grounded.Api/appsettings.Local.json` (git-ignored):
 }
 ```
 
-### 3. Configure LLM access (optional)
-
-To use a real LLM, set environment variables before running the API:
-
-| Variable | Default | Description |
-|---|---|---|
-| `GROUNDED_PLANNER_MODEL` | — | Model name, e.g. `gpt-4o-mini` |
-| `GROUNDED_PLANNER_API_KEY` | — | API key |
-| `GROUNDED_PLANNER_BASE_URL` | `https://api.openai.com/v1/` | OpenAI-compatible base URL |
-| `GROUNDED_PLANNER_TIMEOUT_SECONDS` | `15` | Per-request timeout |
-
-Without these variables the pipeline runs in deterministic mode (no API calls).
-
-The planner uses **Structured Outputs** (`response_format: json_schema`, `strict: true`) with a fixed JSON Schema for `QueryPlan`. Temperature is locked to `0` and `max_tokens` to `500`.
-
-### 4. Run the API
+### 3. Run the API
 
 ```bash
 bash scripts/api-run.sh
@@ -193,9 +210,9 @@ bash scripts/api-run.sh
 # OpenAPI spec: http://localhost:5252/openapi/v1.json
 ```
 
-`api-run.sh` sources `.env` and exports all variables before starting the API, so `GROUNDED_PLANNER_*` keys are picked up automatically. You can also `cd Grounded.Api && dotnet run` if you've already exported the variables in your shell.
+`api-run.sh` sources `.env` and exports all `GROUNDED_*` variables before starting.
 
-### 5. Run the frontend
+### 4. Run the frontend
 
 ```bash
 cd grounded-ui
@@ -204,13 +221,26 @@ npm run dev
 # UI: http://localhost:5173
 ```
 
-The dev server proxies `/analytics/*` to `http://localhost:5252`.
+The Vite dev server proxies `/analytics/*` to `http://localhost:5252`.
 
-### 6. Run tests (no database required)
+### 5. Run tests (no database required)
 
 ```bash
 dotnet test Grounded.slnx
 ```
+
+### Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `GROUNDED_PLANNER_API_KEY` | — | OpenAI API key for planner |
+| `GROUNDED_PLANNER_MODEL` | `gpt-4o-mini` | Planner model name |
+| `GROUNDED_PLANNER_BASE_URL` | `https://api.openai.com/v1/` | OpenAI-compatible base URL |
+| `GROUNDED_PLANNER_TIMEOUT_SECONDS` | `15` | Planner request timeout |
+| `GROUNDED_SYNTHESIS_API_KEY` | — | OpenAI API key for synthesizer |
+| `GROUNDED_SYNTHESIS_MODEL` | `gpt-4o-mini` | Synthesizer model name |
+| `GROUNDED_REPLAY_MODE` | `false` | Use replay fixtures instead of live LLM |
+| `CLOUDFLARE_TUNNEL_TOKEN` | — | Cloudflare Tunnel token |
 
 ---
 
