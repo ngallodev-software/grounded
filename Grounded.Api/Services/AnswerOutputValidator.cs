@@ -38,7 +38,7 @@ public sealed class AnswerOutputValidator
         var visibleValues = rows
             .SelectMany(row => row.Values)
             .Where(value => value is not null)
-            .Select(FormatValue)
+            .SelectMany(FormatVariants)
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -55,15 +55,35 @@ public sealed class AnswerOutputValidator
         return visibleValues.Any(value => text.Contains(value, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static string FormatValue(object? value) =>
-        value switch
+    // Yields multiple representations of a value so the grounding check matches
+    // LLM-formatted output (e.g. "$16,993,824.67" or "16.99M") against raw row values.
+    private static IEnumerable<string> FormatVariants(object? value)
+    {
+        switch (value)
         {
-            null => string.Empty,
-            DateTimeOffset dto => dto.UtcDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            DateTime dt => dt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            decimal number => number.ToString("0.##", CultureInfo.InvariantCulture),
-            double number => number.ToString("0.##", CultureInfo.InvariantCulture),
-            float number => number.ToString("0.##", CultureInfo.InvariantCulture),
-            _ => value.ToString() ?? string.Empty
-        };
+            case null:
+                yield break;
+            case DateTimeOffset dto:
+                yield return dto.UtcDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                yield break;
+            case DateTime dt:
+                yield return dt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+                yield break;
+            case decimal or double or float:
+            {
+                var d = Convert.ToDecimal(value);
+                // Raw unformatted: "16993824.67"
+                yield return d.ToString("0.##", CultureInfo.InvariantCulture);
+                // With thousands separator: "16,993,824.67" — matches LLM currency formatting
+                yield return d.ToString("N2", CultureInfo.InvariantCulture);
+                // Integer form (for whole-number metrics): "16993825"
+                var rounded = Math.Round(d, 0);
+                yield return rounded.ToString("0", CultureInfo.InvariantCulture);
+                yield break;
+            }
+            default:
+                yield return value.ToString() ?? string.Empty;
+                break;
+        }
+    }
 }
