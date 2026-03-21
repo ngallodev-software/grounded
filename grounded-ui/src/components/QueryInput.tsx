@@ -7,10 +7,18 @@ interface QueryInputProps {
   isLoading: boolean
   prefill?: string | null
   onPrefillConsumed?: () => void
+  resetKey?: number
 }
 
-export function QueryInput({ onSubmit, isLoading, prefill, onPrefillConsumed }: QueryInputProps) {
+export function QueryInput({ onSubmit, isLoading, prefill, onPrefillConsumed, resetKey }: QueryInputProps) {
   const [value, setValue] = useState('')
+
+  useEffect(() => {
+    if (resetKey !== undefined) {
+      setValue('')
+      textareaRef.current?.focus()
+    }
+  }, [resetKey])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {

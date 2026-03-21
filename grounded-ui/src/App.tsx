@@ -19,10 +19,18 @@ function useAuth() {
 
 export default function App() {
   const { unlocked, unlock } = useAuth()
-  const { mutate, isPending, data } = useAnalyticsQuery()
+  const { mutate, isPending, data, reset } = useAnalyticsQuery()
   const [lastQuestion, setLastQuestion] = useState<string | null>(null)
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null)
+  const [inputResetKey, setInputResetKey] = useState(0)
   const resultRef = useRef<HTMLDivElement>(null)
+
+  const handleReset = useCallback(() => {
+    reset()
+    setLastQuestion(null)
+    setPendingQuestion(null)
+    setInputResetKey(k => k + 1)
+  }, [reset])
 
   const handleSubmit = useCallback(
     (question: string) => {
@@ -52,13 +60,17 @@ export default function App() {
     <div className="min-h-screen bg-zinc-950 flex flex-col">
       {/* Header */}
       <header className="border-b border-zinc-800/60 px-6 py-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
+        <button
+          onClick={handleReset}
+          className="flex items-center gap-3 hover:opacity-70 transition-opacity"
+          aria-label="Reset to home"
+        >
           <span className="text-zinc-100 font-[Fraunces] font-light text-lg tracking-tight">
             Grounded
           </span>
           <span className="text-zinc-800 font-mono text-xs">·</span>
           <span className="text-zinc-600 font-mono text-xs">analytics</span>
-        </div>
+        </button>
         <div className="flex items-center gap-2">
           {lastQuestion && (
             <span className="text-[11px] font-mono text-zinc-700 max-w-[300px] truncate hidden sm:block">
@@ -82,6 +94,7 @@ export default function App() {
             isLoading={isPending}
             prefill={pendingQuestion}
             onPrefillConsumed={() => setPendingQuestion(null)}
+            resetKey={inputResetKey}
           />
         </div>
       </div>
