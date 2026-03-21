@@ -141,16 +141,18 @@ pipeline {
                     }
                     echo "Internal UI: OK (app root element present)"
 
-                    // --- External URL (through Cloudflare tunnel) --- verify body too
-                    def extBody = sh(
-                        script: "curl -sfL --max-time 20 ${env.EXTERNAL_URL}/",
+                    // --- Cloudflare tunnel connectivity ---
+                    // The external URL sits behind Cloudflare Access so curl can't authenticate.
+                    // Instead verify the tunnel daemon has active registered connections.
+                    def tunnelConnections = sh(
+                        script: "docker compose -f ${env.REPO_DIR}/compose.yaml logs --tail=50 cloudflared 2>/dev/null | grep -c 'Registered tunnel connection' || true",
                         returnStdout: true
-                    ).trim()
+                    ).trim().toInteger()
 
-                    if (!extBody.contains('<div id="root">')) {
-                        error("External URL proof-of-life failed: response did not contain app root element (tunnel may be down or routing incorrectly)")
+                    if (tunnelConnections == 0) {
+                        error("Cloudflare tunnel proof-of-life failed: no registered connections found in cloudflared logs")
                     }
-                    echo "External URL: OK (app root element present)"
+                    echo "Cloudflare tunnel: OK (${tunnelConnections} registered connection(s))"
                 }
             }
         }
