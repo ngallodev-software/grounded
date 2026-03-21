@@ -130,27 +130,27 @@ pipeline {
                     }
                     echo "Internal API: OK (status=${apiStatus})"
 
-                    // --- Internal UI ---
-                    def uiCode = sh(
-                        script: "curl -sf -o /dev/null -w '%{http_code}' ${env.UI_URL}/grounded/",
+                    // --- Internal UI --- verify body contains app landmark, not just HTTP 200
+                    def uiBody = sh(
+                        script: "curl -sf --max-time 10 ${env.UI_URL}/grounded/",
                         returnStdout: true
                     ).trim()
 
-                    if (uiCode != '200') {
-                        error("Internal UI proof-of-life failed: HTTP ${uiCode}")
+                    if (!uiBody.contains('<div id="root">')) {
+                        error("Internal UI proof-of-life failed: response did not contain app root element")
                     }
-                    echo "Internal UI: OK (HTTP ${uiCode})"
+                    echo "Internal UI: OK (app root element present)"
 
-                    // --- External URL (through Cloudflare tunnel) ---
-                    def extCode = sh(
-                        script: "curl -sf -o /dev/null -w '%{http_code}' --max-time 15 ${env.EXTERNAL_URL}/",
+                    // --- External URL (through Cloudflare tunnel) --- verify body too
+                    def extBody = sh(
+                        script: "curl -sfL --max-time 20 ${env.EXTERNAL_URL}/",
                         returnStdout: true
                     ).trim()
 
-                    if (extCode != '200') {
-                        error("External URL proof-of-life failed: HTTP ${extCode} — tunnel may be down")
+                    if (!extBody.contains('<div id="root">')) {
+                        error("External URL proof-of-life failed: response did not contain app root element (tunnel may be down or routing incorrectly)")
                     }
-                    echo "External URL: OK (HTTP ${extCode})"
+                    echo "External URL: OK (app root element present)"
                 }
             }
         }
