@@ -66,12 +66,18 @@ pipeline {
                     sh "docker tag llm-integration-demo-ui:latest  llm-integration-demo-ui:${tag}"
 
                     sh "mkdir -p ${env.REPO_DIR}/ci-artifacts"
+                    // Save to both the persistent repo dir and the workspace so archiveArtifacts can find them
                     sh "docker save llm-integration-demo-api:${tag} | gzip > ${env.REPO_DIR}/ci-artifacts/api-${tag}.tar.gz"
                     sh "docker save llm-integration-demo-ui:${tag}  | gzip > ${env.REPO_DIR}/ci-artifacts/ui-${tag}.tar.gz"
 
-                    // Keep last 5 of each
+                    // Keep last 5 of each in the persistent dir
                     sh "ls -t ${env.REPO_DIR}/ci-artifacts/api-*.tar.gz 2>/dev/null | tail -n +6 | xargs -r rm --"
                     sh "ls -t ${env.REPO_DIR}/ci-artifacts/ui-*.tar.gz  2>/dev/null | tail -n +6 | xargs -r rm --"
+
+                    // Symlink into workspace so archiveArtifacts can resolve them
+                    sh "mkdir -p ci-artifacts"
+                    sh "ln -sf ${env.REPO_DIR}/ci-artifacts/api-${tag}.tar.gz ci-artifacts/api-${tag}.tar.gz"
+                    sh "ln -sf ${env.REPO_DIR}/ci-artifacts/ui-${tag}.tar.gz  ci-artifacts/ui-${tag}.tar.gz"
 
                     currentBuild.description = "tag: ${tag}"
                     echo "Artifacts published: api-${tag}.tar.gz  ui-${tag}.tar.gz"
