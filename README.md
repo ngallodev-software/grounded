@@ -187,12 +187,13 @@ The planner uses **Structured Outputs** (`response_format: json_schema`, `strict
 ### 4. Run the API
 
 ```bash
-cd Grounded.Api
-dotnet run
+bash scripts/api-run.sh
 # API: http://localhost:5252
 # Scalar UI: http://localhost:5252/scalar/v1
 # OpenAPI spec: http://localhost:5252/openapi/v1.json
 ```
+
+`api-run.sh` sources `.env` and exports all variables before starting the API, so `GROUNDED_PLANNER_*` keys are picked up automatically. You can also `cd Grounded.Api && dotnet run` if you've already exported the variables in your shell.
 
 ### 5. Run the frontend
 
