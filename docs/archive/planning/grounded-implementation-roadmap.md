@@ -1,3 +1,9 @@
+> Historical implementation-planning artifact.
+>
+> This roadmap was drafted before validating the current `Grounded` repo. Most of the major architecture items it proposes are already present in `Grounded.Api` and `Grounded.Tests`.
+>
+> Use `docs/grounded-current-status.md` as the canonical reference for what is implemented and what still needs work.
+
 # Grounded Implementation Roadmap
 # Status: Reference Only (Not Execution Source)
 

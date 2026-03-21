@@ -1,3 +1,9 @@
+> Historical implementation-planning artifact.
+>
+> This revised plan was produced before checking the current `Grounded` implementation. Many of the items listed here are already in the repo.
+>
+> Use `docs/grounded-current-status.md` as the canonical reference for actual current status and next steps.
+
 # Grounded — Revised Plan
 
 ## Goal

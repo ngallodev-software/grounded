@@ -1,3 +1,9 @@
+> Historical implementation-planning artifact.
+>
+> This prompt pack assumes a partially implemented `Grounded` codebase. The current repo already contains most of the planner, replay, trace, and conversation-state components it references.
+>
+> Use `docs/grounded-current-status.md` as the canonical reference for current state.
+
 # Grounded — Execution Prompt Pack
 
 ## How to Use This Pack

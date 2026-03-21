@@ -1,3 +1,9 @@
+> Historical implementation-planning artifact.
+>
+> This step-by-step plan predates verification of the current `Grounded` codebase. It should not be treated as the active source of truth for implementation status.
+>
+> Use `docs/grounded-current-status.md` as the canonical reference.
+
 # Grounded — Overall Execution Step by Step
 
 ## Goal

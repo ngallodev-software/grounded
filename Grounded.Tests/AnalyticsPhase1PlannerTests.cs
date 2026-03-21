@@ -151,7 +151,7 @@ public sealed class AnalyticsPhase1PlannerTests
     {
         var prompt = new PromptStore().GetVersionedPrompt("planner", "v1").Content;
 
-        Assert.Contains("Return exactly one JSON object matching the `QueryPlan` contract.", prompt);
+        Assert.Contains("Return exactly one JSON object matching the `QueryPlan` schema.", prompt);
         Assert.Contains("Do not generate SQL.", prompt);
         Assert.Contains("metric = \"__unsupported__\"", prompt);
         Assert.Contains("Question: Show sales by region.", prompt);

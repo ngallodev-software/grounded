@@ -1,3 +1,9 @@
+> Historical implementation-planning artifact.
+>
+> This document predates verification of the current `Grounded` codebase. Most of the major items described here are already implemented under `Grounded.Api` and `Grounded.Tests`.
+>
+> Use `docs/grounded-current-status.md` as the canonical reference for current state.
+
 # Grounded Execution Plan
 ##for original reference only, do not use.  deprecated
 
