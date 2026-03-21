@@ -1,8 +1,23 @@
+using System.Threading.RateLimiting;
 using Grounded.Api.Services;
+using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
+
+builder.Services.AddRateLimiter(options =>
+{
+    // 10 requests per minute per IP on the analytics endpoint
+    options.AddFixedWindowLimiter("analytics", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 10;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+    options.RejectionStatusCode = 429;
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -66,6 +81,8 @@ builder.Services.AddScoped<IAnalyticsQueryExecutor, AnalyticsQueryExecutor>();
 builder.Services.AddScoped<AnalyticsQueryPlanService>();
 
 var app = builder.Build();
+
+app.UseRateLimiter();
 
 app.MapOpenApi();
 app.MapScalarApiReference(options =>

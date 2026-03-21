@@ -1,6 +1,7 @@
 using Grounded.Api.Models;
 using Grounded.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Grounded.Api.Controllers;
 
@@ -26,6 +27,7 @@ public sealed class AnalyticsController : ControllerBase
     /// grounded natural-language answer. Conversation context is maintained via conversationId.
     /// </remarks>
     [HttpPost("query")]
+    [EnableRateLimiting("analytics")]
     [ProducesResponseType(typeof(ExecuteQueryPlanResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ExecuteQueryPlanResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ExecuteQueryPlanResponse), StatusCodes.Status422UnprocessableEntity)]
