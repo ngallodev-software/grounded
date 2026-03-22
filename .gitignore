@@ -6,7 +6,7 @@ obj/
 
 # Local secrets
 .env
-
+*/.env
 # Database backups
 database/backups/
 
