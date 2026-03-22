@@ -14,7 +14,10 @@ database/backups/
 Grounded.Api/appsettings.Local.json
 
 ## archives
+*/*.tar.gz
 *.tar.gz
+*.zip
+
 
 # Jenkins build artifacts
 ci-artifacts/
