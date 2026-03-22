@@ -43,6 +43,8 @@ Each benchmark case is scored across three dimensions with explicit weights:
 
 `RegressionComparer` flags any case that passed in the previous run but fails in the current run. Score deltas are tracked across runs in `eval/regression_history.json`.
 
+The UI includes an Eval tab that displays a static snapshot of a captured eval run (baked into the frontend from `eval/artifacts/`). It is a quick read-only view; it does not invoke `POST /analytics/eval`.
+
 ## Consequences
 
 ### Positive

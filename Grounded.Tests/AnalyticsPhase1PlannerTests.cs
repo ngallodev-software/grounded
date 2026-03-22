@@ -121,7 +121,7 @@ public sealed class AnalyticsPhase1PlannerTests
         var result = await service.ExecuteFromQuestionAsync("Show gross margin by channel last month.", CancellationToken.None);
 
         Assert.False(result.IsSuccess);
-        Assert.Equal(FailureCategories.PlannerValidationFailure, result.Response.FailureCategory);
+        Assert.Equal(FailureCategories.UnsupportedRequest, result.Response.FailureCategory);
         Assert.Equal("__unsupported__", result.Response.Trace?.QueryPlan?.Metric);
         Assert.Contains(result.Response.Errors!, error => error.Code == "invalid_metric");
     }
