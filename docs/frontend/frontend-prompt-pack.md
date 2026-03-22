@@ -1,19 +1,22 @@
-# Grounded Frontend Prompt Pack
+# Grounded UI build notes
 
-## Scaffolding Prompt
-Create React + TS + Vite app with Tailwind + shadcn/ui.
+This is a lightweight reference for how the UI is intended to evolve. It's written as a checklist on purpose so changes stay small and reviewable.
 
-## Auth Prompt
-Implement auth gate using VITE_AUTH_ENABLED.
+## When changing the UI
 
-## Workspace Prompt
-Build query UI with results + internals panels.
+- Keep it single-page.
+- Treat `/analytics/query` as the only "real" interaction.
+- Don’t add free-form SQL input or anything that bypasses the `QueryPlan` pipeline.
+- Keep internals visible and honest (Trace / Plan / SQL / Eval).
 
-## Polish Prompt
-Improve spacing, typography, and visual hierarchy.
+## Adding a new view of data
 
-## API Prompt
-Create DTO-based API client.
+- Prefer a new tab in the internals pane over a new page/route.
+- Ensure the tab works on a narrow right pane (no horizontal scrolling).
+- If the view depends on API changes, update `openapi.yaml` and the UI client types together.
 
-## Review Prompt
-Evaluate minimalism, polish, and demo readiness.
+## Env vars (UI)
+
+- `VITE_API_BASE_URL`: dev proxy target (defaults to `http://localhost:5252`)
+- `VITE_BASE_PATH`: build-time base path (Docker uses `/grounded/`)
+- `VITE_AUTH_ENABLED`: enable the lock screen
