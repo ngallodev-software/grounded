@@ -10,7 +10,6 @@ pipeline {
     environment {
         REPO_DIR      = '/lump/apps/llm-integration-demo'
         API_URL       = 'http://127.0.0.1:5252'
-        UI_URL        = 'http://127.0.0.1:5173'
         EXTERNAL_URL  = 'https://ngallodev-software.uk/grounded'
         NTFY_TOPIC    = 'grounded-ci-478831ef8344'
     }
@@ -130,9 +129,9 @@ pipeline {
                     }
                     echo "Internal API: OK (status=${apiStatus})"
 
-                    // --- Internal UI --- verify body contains app landmark, not just HTTP 200
+                    // --- Internal UI --- verify the container TLS endpoint, not just HTTP 200
                     def uiBody = sh(
-                        script: "curl -sf --max-time 10 ${env.UI_URL}/grounded/",
+                        script: "docker compose -f ${env.REPO_DIR}/compose.yaml exec -T ui wget --no-check-certificate -qO- https://127.0.0.1/",
                         returnStdout: true
                     ).trim()
 
@@ -145,7 +144,7 @@ pipeline {
                     // The external URL sits behind Cloudflare Access so curl can't authenticate.
                     // Instead verify the tunnel daemon has active registered connections.
                     def tunnelConnections = sh(
-                        script: "docker compose -f ${env.REPO_DIR}/compose.yaml logs --tail=50 cloudflared 2>/dev/null | grep -c 'Registered tunnel connection' || true",
+                        script: "docker compose -f ${env.REPO_DIR}/compose.yaml logs --tail=500 cloudflared 2>/dev/null | grep -c 'Registered tunnel connection' || true",
                         returnStdout: true
                     ).trim().toInteger()
 

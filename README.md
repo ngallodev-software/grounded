@@ -1,8 +1,8 @@
 # Grounded
 
-A focused demonstration of production-grade LLM integration patterns for an analytics backend.
+Demo app: a guarded natural-language analytics interface on top of Postgres.
 
-The core thesis: LLMs should produce *structured intent*, not free-form SQL or prose. Everything downstream — compilation, execution, synthesis — is deterministic, validated, and testable without touching an API.
+The LLM produces a structured `QueryPlan` (intent). Everything downstream is application code: validation, SQL compilation, safety checks, execution, and answer synthesis.
 
 ---
 
@@ -10,7 +10,7 @@ The core thesis: LLMs should produce *structured intent*, not free-form SQL or p
 
 A user asks a natural-language analytics question. The system:
 
-1. **Plans** — converts the question into a typed `QueryPlan` (metric, dimension, filters, time range, sort) via an LLM using OpenAI Structured Outputs
+1. **Plans** — converts the question into a typed `QueryPlan` (metric, dimension, filters, time range, sort) using Structured Outputs
 2. **Validates** — enforces allowlists on every field before anything touches the database
 3. **Compiles** — translates the plan into a parameterized SQL query via a fragment registry; no string interpolation
 4. **Guards** — runs a second-pass SQL safety check to block multi-statement queries and disallowed keywords
@@ -44,7 +44,7 @@ ScoringService + RegressionComparer
 
 **Both LLM seams are injectable.** `ILlmPlannerGateway` and `ILlmGateway` are interfaces. The pipeline runs, tests, and evaluates in deterministic mode (no API keys or network access required). Swapping in a real OpenAI or Anthropic implementation is a one-class change.
 
-**Tests are integration tests.** All tests use `WebApplicationFactory` and exercise the full HTTP → service → synthesis path. No internal mocking.
+**Tests are integration tests.** Tests use `WebApplicationFactory` and exercise the full HTTP → service → synthesis path.
 
 **API guardrails are built in.** All LLM calls enforce `temperature=0`, `max_tokens=500`, and a configurable timeout (default 15 s). The planner uses Structured Outputs (strict JSON Schema) so the LLM cannot deviate from the `QueryPlan` shape.
 
@@ -163,8 +163,16 @@ This starts four containers:
 |---|---|---|
 | `grounded-postgres` | PostgreSQL 17 | `127.0.0.1:5432` |
 | `grounded-api` | ASP.NET Core API | `127.0.0.1:5252` |
-| `grounded-ui` | React frontend (nginx) | `127.0.0.1:5173` |
-| `grounded-cloudflared` | Cloudflare Tunnel → UI | — |
+| `grounded-ui` | React frontend (nginx) | Docker network only |
+| `grounded-cloudflared` | Cloudflare Tunnel → UI (TLS terminates at Cloudflare) | — |
+
+**Ingress model:** Cloudflare terminates HTTPS at the edge, and the tunnel should target the nginx UI container over HTTPS on `443`. Nginx proxies `/analytics/*` to the API over HTTP.
+
+**Origin cert option:** Cloudflare can issue an Origin CA certificate for this hostname. In the Cloudflare dashboard, go to `SSL/TLS` → `Origin Server` → `Create certificate`, include the origin hostnames you need, and store the cert and key on the server at `/etc/cloudflare/origin/ngallodev-software.uk.pem` and `/etc/cloudflare/origin/ngallodev-software.uk.key`. The UI container mounts those files into `/etc/nginx/certs/tls.crt` and `/etc/nginx/certs/tls.key`, and `cloudflared` should target `https://ui:443`.
+
+Deployment checklist: [`docs/infrastructure/cloudflare-https-checklist.md`](docs/infrastructure/cloudflare-https-checklist.md)
+
+Automation: `make check-https` runs the local ingress checks, `PUBLIC_URL=https://... make check-https` adds the public HTTPS check, and `PUBLIC_URL=https://... make check-https-public` checks only the live public URL.
 
 ### 3. Seed the database (first run only)
 
@@ -197,9 +205,14 @@ Create `Grounded.Api/appsettings.Local.json` (git-ignored):
 {
   "ConnectionStrings": {
     "AnalyticsDatabase": "Host=127.0.0.1;Port=5432;Database=grounded;Username=grounded;Password=<your-password>"
+  },
+  "Database": {
+    "AppSchema": "grounded"
   }
 }
 ```
+
+If you’re sharing a single local Postgres instance across apps, set `Database:AppSchema` to a unique schema name per app. If you don’t set `Search Path` in the connection string, the API defaults it to `grounded,public`.
 
 ### 3. Run the API
 
@@ -246,7 +259,9 @@ dotnet test Grounded.slnx
 
 ## UI
 
-The `grounded-ui` React frontend provides a split-pane interface: left panel shows the answer and result table, right panel exposes execution internals via three tabs.
+The `grounded-ui` React frontend is a split pane: answer + table on the left, execution internals on the right (Trace, Plan, SQL, Eval).
+
+Docker builds the UI with a base path for the internal nginx origin. In dev mode (`npm run dev`) it serves at `http://localhost:5173/`; the containerized stack is reached through Cloudflare Tunnel or `docker compose exec`.
 
 **Empty state** — query input with example prompts:
 
@@ -255,6 +270,10 @@ The `grounded-ui` React frontend provides a split-pane interface: left panel sho
 **Question typed** — natural-language input ready to submit:
 
 ![Question typed](docs/screenshots/ui-question-typed.png)
+
+**Query result** — grounded answer summary and the actual result rows:
+
+![Query result](docs/screenshots/ui-results.png)
 
 **Trace tab** — execution metadata (request ID, planner status, duration, LLM latency, row count):
 
@@ -267,6 +286,10 @@ The `grounded-ui` React frontend provides a split-pane interface: left panel sho
 **SQL tab** — the parameterized SQL compiled from the plan by `QueryPlanCompiler`, never generated by the LLM:
 
 ![SQL tab](docs/screenshots/ui-sql-tab.png)
+
+**Eval tab** — a static benchmark snapshot baked into the UI (from `eval/artifacts/`):
+
+![Eval tab](docs/screenshots/ui-eval-tab.png)
 
 ---
 
@@ -358,14 +381,21 @@ docs/
 
 ## Database schema
 
-The `grounded` PostgreSQL schema contains four analytics tables seeded with two years of e-commerce data:
+This repo uses two Postgres schemas by default:
+
+- `grounded` — app-owned tables (traces, eval runs, conversation state)
+- `public` — analytics tables (`customers`, `products`, `orders`, `order_items`)
+
+The API connection factory defaults `search_path` to `grounded,public` unless you explicitly set `Search Path` in your connection string. That keeps app tables out of `public` while still resolving analytics tables without schema-qualifying every reference.
+
+The analytics tables are seeded with two years of e-commerce-shaped data:
 
 - **`customers`** — region, segment, acquisition channel, customer type, join date
 - **`products`** — category, subcategory, unit price
 - **`orders`** — customer, date, channel, shipping region, status
 - **`order_items`** — product, order, quantity, unit price
 
-App-owned tables (traces, eval runs, conversation state) are created automatically in the app schema on startup by `SchemaInitializer`.
+App-owned tables are created automatically by `SchemaInitializer` at API startup.
 
 ---
 

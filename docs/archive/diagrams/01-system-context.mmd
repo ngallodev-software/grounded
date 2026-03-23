@@ -1,0 +1,27 @@
+# System Context Diagram
+
+Grounded is a natural-language analytics API. Users ask business questions in plain English;
+the system plans, executes, and narrates the answer from live Postgres data.
+
+```mermaid
+C4Context
+    title Grounded — System Context
+
+    Person(user, "End User", "Asks natural-language analytics questions via browser")
+    Person(dev, "Developer / Evaluator", "Runs evals, inspects traces, submits raw query plans")
+
+    System_Boundary(grounded, "Grounded System") {
+        System(ui, "Grounded UI", "React SPA served by nginx. Query input, answer display, eval panel, internals panel.")
+        System(api, "Grounded API", "ASP.NET Core. NL→plan→SQL→answer pipeline. Trace + eval persistence.")
+        SystemDb(pg, "PostgreSQL", "Analytics data (customers, products, orders). Trace / eval / conversation state tables.")
+    }
+
+    System_Ext(llm, "LLM Provider", "OpenAI-compatible endpoint (Claude, GPT, local). Planner + answer synthesizer calls.")
+
+    Rel(user, ui, "Submits question, reads answer", "HTTPS")
+    Rel(dev, ui, "Views eval results, inspects trace internals", "HTTPS")
+    Rel(dev, api, "POST /analytics/query-plan, POST /analytics/eval", "HTTPS / REST")
+    Rel(ui, api, "POST /analytics/query", "HTTPS / REST")
+    Rel(api, pg, "Reads analytics data, writes traces + eval records", "TCP / Npgsql")
+    Rel(api, llm, "Planner prompt, answer synthesis prompt", "HTTPS / OpenAI API")
+```

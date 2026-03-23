@@ -1,0 +1,96 @@
+flowchart LR
+    subgraph Browser["Browser / React UI"]
+        App["App"]
+        Hook["useAnalyticsQuery"]
+        Post["postQuery()"]
+        AnswerPanel["AnswerPanel"]
+        InternalsPanel["InternalsPanel"]
+        App --> Hook --> Post
+        App --> AnswerPanel
+        App --> InternalsPanel
+    end
+
+    subgraph Api["Grounded.Api"]
+        Controller["AnalyticsController"]
+        Orchestrator["AnalyticsQueryPlanService"]
+        Conversation["ConversationStateService"]
+
+        subgraph Planner["Planner stage"]
+            PromptStore["PromptStore"]
+            PromptRenderer["PlannerPromptRenderer"]
+            ContextBuilder["PlannerContextBuilder"]
+            PlannerGateway["Planner gateway\n(OpenAI-compatible)"]
+            PlannerParser["PlannerResponseParser"]
+            PlannerRepair["PlannerResponseRepairService"]
+        end
+
+        subgraph Compile["Plan to SQL"]
+            Validator["QueryPlanValidator"]
+            TimeRange["TimeRangeResolver"]
+            Compiler["QueryPlanCompiler"]
+            Safety["SqlSafetyGuard"]
+            Executor["AnalyticsQueryExecutor"]
+        end
+
+        subgraph Answer["Answer stage"]
+            AnswerSynth["AnswerSynthesizer"]
+            AnswerValidator["AnswerOutputValidator"]
+            AnswerGateway["Answer gateway\n(OpenAI-compatible)"]
+        end
+
+        TraceRepo["TraceRepository"]
+        EvalRunner["EvalRunner"]
+        QueryPlanEndpoint["POST /analytics/query-plan"]
+        EvalEndpoint["POST /analytics/eval"]
+    end
+
+    subgraph Invokers["Model invoker layer"]
+        Resolver["ModelInvokerResolver"]
+        OpenAIInvoker["OpenAiCompatibleModelInvoker"]
+        DeterministicInvoker["DeterministicModelInvoker"]
+        ReplayInvoker["ReplayModelInvoker"]
+    end
+
+    subgraph Data["PostgreSQL"]
+        AnalyticsSchema["analytics schema"]
+        GroundedSchema["grounded schema\ntraces + conversation state + eval"]
+    end
+
+    App --> Controller
+    Controller --> Orchestrator
+    Controller --> QueryPlanEndpoint
+    Controller --> EvalEndpoint
+
+    Orchestrator --> Conversation
+    Orchestrator --> PromptRenderer
+    Orchestrator --> Validator
+    Orchestrator --> TimeRange
+    Orchestrator --> Compiler
+    Orchestrator --> Safety
+    Orchestrator --> Executor
+    Orchestrator --> AnswerSynth
+    Orchestrator --> TraceRepo
+
+    PromptRenderer --> PromptStore
+    PromptRenderer --> ContextBuilder
+    PromptRenderer --> PlannerGateway
+    PlannerGateway --> PlannerParser
+    PlannerGateway --> PlannerRepair
+    PlannerGateway --> Resolver
+
+    AnswerSynth --> PromptStore
+    AnswerSynth --> AnswerValidator
+    AnswerSynth --> AnswerGateway
+    AnswerGateway --> Resolver
+
+    Resolver --> OpenAIInvoker
+    Resolver -. tests / eval .-> DeterministicInvoker
+    Resolver -. replay mode .-> ReplayInvoker
+
+    Executor --> AnalyticsSchema
+    Conversation --> GroundedSchema
+    TraceRepo --> GroundedSchema
+    EvalRunner --> GroundedSchema
+    AnswerSynth --> GroundedSchema
+    PlannerGateway --> OpenAIInvoker
+    AnswerGateway --> OpenAIInvoker
