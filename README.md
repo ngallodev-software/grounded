@@ -163,8 +163,16 @@ This starts four containers:
 |---|---|---|
 | `grounded-postgres` | PostgreSQL 17 | `127.0.0.1:5432` |
 | `grounded-api` | ASP.NET Core API | `127.0.0.1:5252` |
-| `grounded-ui` | React frontend (nginx) | `127.0.0.1:5173` |
-| `grounded-cloudflared` | Cloudflare Tunnel → UI | — |
+| `grounded-ui` | React frontend (nginx) | Docker network only |
+| `grounded-cloudflared` | Cloudflare Tunnel → UI (TLS terminates at Cloudflare) | — |
+
+**Ingress model:** Cloudflare terminates HTTPS at the edge, and the tunnel should target the nginx UI container over HTTPS on `443`. Nginx proxies `/analytics/*` to the API over HTTP.
+
+**Origin cert option:** Cloudflare can issue an Origin CA certificate for this hostname. In the Cloudflare dashboard, go to `SSL/TLS` → `Origin Server` → `Create certificate`, include the origin hostnames you need, and store the cert and key on the server at `/etc/cloudflare/origin/ngallodev-software.uk.pem` and `/etc/cloudflare/origin/ngallodev-software.uk.key`. The UI container mounts those files into `/etc/nginx/certs/tls.crt` and `/etc/nginx/certs/tls.key`, and `cloudflared` should target `https://ui:443`.
+
+Deployment checklist: [`docs/infrastructure/cloudflare-https-checklist.md`](docs/infrastructure/cloudflare-https-checklist.md)
+
+Automation: `make check-https` runs the local ingress checks, `PUBLIC_URL=https://... make check-https` adds the public HTTPS check, and `PUBLIC_URL=https://... make check-https-public` checks only the live public URL.
 
 ### 3. Seed the database (first run only)
 
@@ -253,7 +261,7 @@ dotnet test Grounded.slnx
 
 The `grounded-ui` React frontend is a split pane: answer + table on the left, execution internals on the right (Trace, Plan, SQL, Eval).
 
-Docker builds the UI with a base path, so it's served at `http://localhost:5173/grounded/`. In dev mode (`npm run dev`) it serves at `http://localhost:5173/`.
+Docker builds the UI with a base path for the internal nginx origin. In dev mode (`npm run dev`) it serves at `http://localhost:5173/`; the containerized stack is reached through Cloudflare Tunnel or `docker compose exec`.
 
 **Empty state** — query input with example prompts:
 

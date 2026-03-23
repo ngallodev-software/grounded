@@ -1,0 +1,89 @@
+sequenceDiagram
+    actor User
+    participant UI as Grounded UI
+    participant Controller as AnalyticsController
+    participant Service as AnalyticsQueryPlanService
+    participant Conversation as ConversationStateService
+    participant Renderer as PlannerPromptRenderer
+    participant Context as PlannerContextBuilder
+    participant PromptStore as PromptStore
+    participant PlannerGW as Planner gateway
+    participant PlannerLLM as OpenAI-compatible LLM
+    participant Parser as PlannerResponseParser
+    participant Repair as PlannerResponseRepairService
+    participant Validator as QueryPlanValidator
+    participant TimeRange as TimeRangeResolver
+    participant Compiler as QueryPlanCompiler
+    participant Safety as SqlSafetyGuard
+    participant Executor as AnalyticsQueryExecutor
+    participant DB as PostgreSQL
+    participant AnswerSynth as AnswerSynthesizer
+    participant AnswerGW as Answer gateway
+    participant AnswerLLM as OpenAI-compatible LLM
+    participant AnswerVal as AnswerOutputValidator
+    participant TraceRepo as TraceRepository
+
+    User->>UI: enter natural-language question
+    UI->>Controller: POST /analytics/query
+    Controller->>Service: ExecuteFromQuestionAsync(question, traceId, conversationId)
+
+    Service->>Conversation: GetAsync(conversationId)
+    Conversation-->>Service: prior state
+    Service->>Conversation: Resolve(question, prior state)
+
+    alt supported follow-up
+        Conversation-->>Service: supported QueryPlan
+    else new question
+        Service->>Renderer: Render(question, prior state)
+        Renderer->>PromptStore: GetVersionedPrompt("planner", "v2")
+        Renderer->>Context: Build()
+        Renderer-->>Service: rendered planner prompt + context
+        Service->>PlannerGW: PlanFromQuestionAsync(rendered prompt)
+        PlannerGW->>PlannerLLM: structured output request
+        PlannerLLM-->>PlannerGW: QueryPlan JSON
+        PlannerGW-->>Service: raw planner response
+        Service->>Parser: Parse(raw planner content)
+        Parser-->>Service: parsed QueryPlan
+        Service->>Repair: TryRepair(parse result)
+        Repair-->>Service: repaired or original parse result
+    end
+
+    Service->>Validator: Validate(QueryPlan)
+    Validator-->>Service: validation result
+
+    alt validation failed
+        Service-->>Controller: error response + trace
+        Controller-->>UI: 422
+    else valid
+        Service->>TimeRange: Resolve(timeRange)
+        TimeRange-->>Service: resolved UTC range
+        Service->>Compiler: Compile(QueryPlan, resolved range)
+        Compiler-->>Service: compiled SQL + parameters
+        Service->>Safety: Validate(compiled SQL)
+        Safety-->>Service: safe / blocked
+
+        alt SQL blocked
+            Service-->>Controller: error response + trace
+            Controller-->>UI: 422
+        else SQL safe
+            Service->>Executor: ExecuteAsync(compiled SQL)
+            Executor->>DB: read-only SQL query
+            DB-->>Executor: rows + metadata
+            Executor-->>Service: QueryExecutionResult
+
+            Service->>AnswerSynth: SynthesizeAsync(question, plan, rows, metadata)
+            AnswerSynth->>PromptStore: GetVersionedPrompt("answer-synthesizer", "v1")
+            AnswerSynth->>AnswerGW: send answer prompt + structured request
+            AnswerGW->>AnswerLLM: structured output request
+            AnswerLLM-->>AnswerGW: Answer JSON
+            AnswerGW-->>AnswerSynth: raw answer response
+            AnswerSynth->>AnswerVal: Validate(answer, rows)
+            AnswerVal-->>AnswerSynth: validated answer
+
+            Service->>TraceRepo: PersistAsync(trace record)
+            Service->>Conversation: SaveAsync(conversationId, queryPlan)
+            Service-->>Controller: success response + trace
+            Controller-->>UI: 200
+            UI-->>User: render answer, plan, SQL, and trace
+        end
+    end

@@ -1,0 +1,165 @@
+classDiagram
+    direction LR
+
+    class QueryRequest {
+        +string question
+        +string conversationId
+    }
+
+    class QueryMetadata {
+        +int rowCount
+        +int durationMs
+        +int llmLatencyMs
+    }
+
+    class QueryAnswer {
+        +string summary
+        +string[] keyPoints
+        +bool tableIncluded
+    }
+
+    class LlmStageTrace {
+        +string provider
+        +string modelName
+        +int? latencyMs
+        +int tokensIn
+        +int tokensOut
+        +string failureCategory
+        +string? promptKey
+        +string? promptVersion
+        +bool? parseSucceeded
+        +bool? repairAttempted
+        +bool? cacheHit
+        +string? failureMessage
+        +string? errorMessage
+    }
+
+    class QueryTrace {
+        +string requestId
+        +string traceId
+        +string plannerStatus
+        +string? synthesisStatus
+        +string? finalStatus
+        +string? failureCategory
+        +int? durationMs
+        +int? llmLatencyMs
+        +int? rowCount
+        +string? compiledSql
+        +QueryPlan? queryPlan
+        +LlmStageTrace? planner
+        +LlmStageTrace? synthesizer
+        +string? startedAt
+        +string? completedAt
+    }
+
+    class QuerySuccessResponse {
+        +string status
+        +object[] rows
+        +QueryMetadata metadata
+        +QueryAnswer answer
+        +QueryTrace trace
+    }
+
+    class ValidationError {
+        +string code
+        +string message
+    }
+
+    class QueryErrorResponse {
+        +string status
+        +string failureCategory
+        +ValidationError[] errors
+        +QueryTrace trace
+    }
+
+    class AnswerDto {
+        +string summary
+        +string[] keyPoints
+        +bool tableIncluded
+    }
+
+    class PlannerTrace {
+        +string promptKey
+        +string promptVersion
+        +string promptChecksum
+        +string provider
+        +string modelName
+        +datetime requestedAt
+        +datetime respondedAt
+        +int latencyMs
+        +int tokensIn
+        +int tokensOut
+        +bool parseSucceeded
+        +bool repairAttempted
+        +bool repairSucceeded
+        +bool cacheHit
+        +string failureCategory
+        +string? failureMessage
+    }
+
+    class SynthesizerTrace {
+        +string provider
+        +string promptVersion
+        +string modelName
+        +datetime requestedAt
+        +datetime respondedAt
+        +int tokensIn
+        +int tokensOut
+        +string failureCategory
+        +string? errorMessage
+    }
+
+    class QueryPlan {
+    }
+
+    class QueryExecutionMetadata {
+    }
+
+    class QueryExecutionTrace {
+        +string requestId
+        +string traceId
+        +QueryPlan? queryPlan
+        +PlannerTrace? planner
+        +QueryExecutionMetadata? metadata
+        +string compiledSql
+        +AnswerDto? answer
+        +SynthesizerTrace? synthesizer
+        +string plannerStatus
+        +string synthesisStatus
+        +string finalStatus
+        +string failureCategory
+        +bool synthesisFailed
+    }
+
+    class PersistedTraceRecord {
+        +string requestId
+        +string traceId
+        +datetime startedAt
+        +datetime completedAt
+        +string finalStatus
+        +string failureCategory
+        +QueryPlan? queryPlan
+        +ValidationError[]? validationErrors
+        +string? compiledSql
+        +int? rowCount
+        +object? plannerAttempt
+        +object? synthesisAttempt
+    }
+
+    QuerySuccessResponse *-- QueryMetadata
+    QuerySuccessResponse *-- QueryAnswer
+    QuerySuccessResponse *-- QueryTrace
+    QueryErrorResponse *-- ValidationError
+    QueryErrorResponse *-- QueryTrace
+    QueryTrace *-- LlmStageTrace : planner
+    QueryTrace *-- LlmStageTrace : synthesizer
+    QueryTrace o-- QueryPlan : queryPlan
+    QueryExecutionTrace *-- PlannerTrace
+    QueryExecutionTrace *-- SynthesizerTrace
+    QueryExecutionTrace *-- AnswerDto
+    QueryExecutionTrace o-- QueryPlan
+    QueryExecutionTrace o-- QueryExecutionMetadata
+    PersistedTraceRecord o-- QueryPlan
+    PersistedTraceRecord o-- ValidationError
+    PersistedTraceRecord ..> PlannerTrace : plannerAttempt JSON
+    PersistedTraceRecord ..> SynthesizerTrace : synthesisAttempt JSON

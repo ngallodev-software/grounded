@@ -1,0 +1,17 @@
+flowchart LR
+    User[User]
+    UI[Grounded UI\nReact + Vite]
+    API[Grounded.Api\nASP.NET Core]
+    DB[(PostgreSQL)]
+    LLM[OpenAI-compatible\nLLM endpoint]
+
+    User -->|asks analytics question| UI
+    UI -->|POST /analytics/query| API
+    UI -->|POST /analytics/query-plan| API
+    UI -->|POST /analytics/eval| API
+
+    API -->|reads and writes traces\nconversation state| DB
+    API -->|executes parameterized SQL| DB
+    API -->|planner prompt| LLM
+    API -->|answer synthesis prompt| LLM
+    API -->|response payload| UI

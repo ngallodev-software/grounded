@@ -10,6 +10,10 @@
 
 User -> UI -> API -> Postgres
 
+Ingress is edge-terminated by Cloudflare Tunnel, with the UI container serving TLS on 443 internally:
+
+User -> Cloudflare HTTPS edge -> `cloudflared` -> nginx UI (HTTPS 443) -> API -> Postgres
+
 LLM calls happen behind the API boundary:
 
 User -> UI -> API -> (planner LLM) -> QueryPlan -> compiler -> Postgres -> (synth LLM) -> answer
