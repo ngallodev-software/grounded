@@ -92,8 +92,27 @@ pipeline {
         stage('Deploy to Production') {
             steps {
                 dir("${env.REPO_DIR}") {
-                    // Rolling restart — only recreates containers whose image changed
-                    sh 'docker compose up -d --remove-orphans'
+                    script {
+                        // Only recreate api and ui — never touch postgres or cloudflared.
+                        // --no-deps prevents compose from cascading restarts to dependents.
+                        // Check if each container is already running; if so, do an in-place
+                        // recreate of just that service so the live site has zero downtime gaps
+                        // from unrelated containers being torn down.
+                        def apiRunning  = sh(script: 'docker inspect -f "{{.State.Running}}" grounded-api  2>/dev/null || echo false', returnStdout: true).trim()
+                        def uiRunning   = sh(script: 'docker inspect -f "{{.State.Running}}" grounded-ui   2>/dev/null || echo false', returnStdout: true).trim()
+
+                        if (apiRunning == 'true') {
+                            sh 'docker compose up -d --no-deps --force-recreate api'
+                        } else {
+                            sh 'docker compose up -d --no-deps api'
+                        }
+
+                        if (uiRunning == 'true') {
+                            sh 'docker compose up -d --no-deps --force-recreate ui'
+                        } else {
+                            sh 'docker compose up -d --no-deps ui'
+                        }
+                    }
                 }
             }
         }
