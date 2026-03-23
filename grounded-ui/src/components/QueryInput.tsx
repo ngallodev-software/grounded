@@ -57,8 +57,8 @@ export function QueryInput({ onSubmit, isLoading, prefill, onPrefillConsumed, re
       <div
         className={cn(
           'relative flex items-end gap-0 border transition-all duration-200',
-          'border-zinc-700/60 bg-zinc-900/80',
-          'focus-within:border-amber-500/50 focus-within:bg-zinc-900',
+          'border-zinc-700/60 bg-zinc-700/40',
+          'focus-within:border-amber-500/50 focus-within:bg-zinc-700/50',
           'shadow-lg shadow-black/20'
         )}
       >
@@ -73,7 +73,7 @@ export function QueryInput({ onSubmit, isLoading, prefill, onPrefillConsumed, re
           disabled={isLoading}
           className={cn(
             'flex-1 resize-none bg-transparent px-5 py-4 text-sm text-zinc-100',
-            'placeholder:text-zinc-600 font-mono leading-relaxed',
+            'placeholder:text-zinc-400 font-mono leading-relaxed',
             'focus:outline-none min-h-[52px] max-h-[200px] overflow-y-auto',
             'disabled:opacity-50 disabled:cursor-not-allowed'
           )}
