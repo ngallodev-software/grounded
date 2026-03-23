@@ -77,7 +77,7 @@ function SchemaPanel() {
     <div className="border border-zinc-800/60 bg-zinc-900/40 divide-y divide-zinc-800/40">
       <div className="px-4 py-2.5 flex items-center gap-2">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Data schema</span>
-        <span className="text-[10px] font-mono text-zinc-700">— what you can ask about</span>
+        <span className="text-[10px] font-mono text-zinc-400">— what you can ask about</span>
       </div>
       {SCHEMA_SECTIONS.map((section) => (
         <div key={section.label} className="px-4 py-3 space-y-1.5">
@@ -89,7 +89,7 @@ function SchemaPanel() {
               <div key={item.name} className="flex items-baseline gap-2">
                 <span className="text-xs font-mono text-zinc-300 shrink-0">{item.name}</span>
                 {item.desc && (
-                  <span className="text-[11px] font-mono text-zinc-600 leading-tight">{item.desc}</span>
+                  <span className="text-[11px] font-mono text-zinc-400 leading-tight">{item.desc}</span>
                 )}
               </div>
             ))}
@@ -150,7 +150,7 @@ export function AnswerPanel({ response, isLoading, onSelectQuestion }: AnswerPan
           </div>
         </div>
 
-        <p className="text-zinc-600 text-sm font-mono leading-relaxed text-center max-w-xs">
+        <p className="text-zinc-400 text-sm font-mono leading-relaxed text-center max-w-xs">
           Ask a natural language question about your analytics data.
         </p>
 
@@ -160,7 +160,7 @@ export function AnswerPanel({ response, isLoading, onSelectQuestion }: AnswerPan
             <button
               key={q}
               onClick={() => onSelectQuestion?.(q)}
-              className="text-xs font-mono text-zinc-500 border border-zinc-800/60 px-3 py-2 text-left hover:border-amber-500/40 hover:text-zinc-300 hover:bg-zinc-900/60 transition-all duration-150"
+              className="text-xs font-mono text-zinc-300 border border-zinc-800/60 px-3 py-2 text-left hover:border-amber-500/40 hover:text-zinc-100 hover:bg-zinc-900/60 transition-all duration-150"
             >
               {q}
             </button>
