@@ -13,6 +13,7 @@ public interface ILlmGateway
 
 public sealed record LlmAnswerResponse(
     string Content,
+    string Provider,
     string ModelName,
     int TokensIn,
     int TokensOut,
@@ -53,6 +54,7 @@ public sealed class DeterministicLlmGateway : ILlmGateway
 
         return new LlmAnswerResponse(
             result.Response.Content,
+            result.Response.Provider,
             result.Response.ModelName,
             result.Response.Usage.TokensIn,
             result.Response.Usage.TokensOut,

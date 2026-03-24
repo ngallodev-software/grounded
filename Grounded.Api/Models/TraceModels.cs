@@ -51,6 +51,12 @@ public sealed record ModelInvocationResult(
     ModelResponse? Response,
     ModelFailure? Failure);
 
+public enum ModelProvider
+{
+    OpenAiCompatible,
+    Anthropic
+}
+
 public sealed record PersistedPlannerAttempt(
     string PromptKey,
     string PromptVersion,

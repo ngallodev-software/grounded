@@ -205,14 +205,14 @@ public sealed class AnalyticsPhase2TraceTests
         public Task<LlmAnswerResponse> SendAnswerRequestAsync(PromptDefinition prompt, AnswerSynthesizerRequest request, CancellationToken cancellationToken)
         {
             var content = """{"summary":"Revenue was 123","keyPoints":["123"],"tableIncluded":false}""";
-            return Task.FromResult(new LlmAnswerResponse(content, "deterministic-local", 10, 5, FixedNow, FixedNow));
+            return Task.FromResult(new LlmAnswerResponse(content, "deterministic", "deterministic-local", 10, 5, FixedNow, FixedNow));
         }
     }
 
     private sealed class InvalidJsonLlmGateway : ILlmGateway
     {
         public Task<LlmAnswerResponse> SendAnswerRequestAsync(PromptDefinition prompt, AnswerSynthesizerRequest request, CancellationToken cancellationToken) =>
-            Task.FromResult(new LlmAnswerResponse("{not-json", "deterministic-local", 10, 5, FixedNow, FixedNow));
+            Task.FromResult(new LlmAnswerResponse("{not-json", "deterministic", "deterministic-local", 10, 5, FixedNow, FixedNow));
     }
 
     private sealed class FixedClock : IUtcClock

@@ -30,7 +30,7 @@ public sealed class OpenAiCompatibleAnswerGateway : ILlmGateway
             .AppendLine("```")
             .ToString();
 
-        var invokerName = IsReplayEnabled() ? "replay" : "openai_compatible";
+        var invokerName = ModelProviderSelector.ResolveInvokerName("synthesizer");
         var result = await _modelInvokerResolver.GetRequired(invokerName).InvokeAsync(
             new ModelRequest(
                 invokerName,
@@ -53,13 +53,11 @@ public sealed class OpenAiCompatibleAnswerGateway : ILlmGateway
 
         return new LlmAnswerResponse(
             result.Response.Content,
+            result.Response.Provider,
             result.Response.ModelName,
             result.Response.Usage.TokensIn,
             result.Response.Usage.TokensOut,
             result.Response.RequestedAt,
             result.Response.RespondedAt);
     }
-
-    private static bool IsReplayEnabled() =>
-        string.Equals(Environment.GetEnvironmentVariable("GROUNDED_REPLAY_MODE"), "true", StringComparison.OrdinalIgnoreCase);
 }

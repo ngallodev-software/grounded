@@ -57,15 +57,29 @@ builder.Services.AddSingleton<AnswerOutputValidator>();
 builder.Services.AddSingleton<ILlmGateway, OpenAiCompatibleAnswerGateway>();
 builder.Services.AddHttpClient<OpenAiCompatibleModelInvoker>(client =>
 {
-    var baseUrl = Environment.GetEnvironmentVariable("GROUNDED_PLANNER_BASE_URL")
+    var baseUrl = Environment.GetEnvironmentVariable("GROUNDED_OPENAI_BASE_URL")
+        ?? Environment.GetEnvironmentVariable("GROUNDED_PLANNER_BASE_URL")
         ?? "https://api.openai.com/v1/";
     client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
-    var timeoutSeconds = int.TryParse(Environment.GetEnvironmentVariable("GROUNDED_PLANNER_TIMEOUT_SECONDS"), out var configuredTimeout)
+    var timeoutRaw = Environment.GetEnvironmentVariable("GROUNDED_OPENAI_TIMEOUT_SECONDS")
+        ?? Environment.GetEnvironmentVariable("GROUNDED_PLANNER_TIMEOUT_SECONDS");
+    var timeoutSeconds = int.TryParse(timeoutRaw, out var configuredTimeout)
+        ? configuredTimeout
+        : 15;
+    client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+});
+builder.Services.AddHttpClient<AnthropicModelInvoker>(client =>
+{
+    var baseUrl = Environment.GetEnvironmentVariable("GROUNDED_ANTHROPIC_BASE_URL")
+        ?? "https://api.anthropic.com/v1/";
+    client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
+    var timeoutSeconds = int.TryParse(Environment.GetEnvironmentVariable("GROUNDED_ANTHROPIC_TIMEOUT_SECONDS"), out var configuredTimeout)
         ? configuredTimeout
         : 15;
     client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
 });
 builder.Services.AddSingleton<IModelInvoker>(services => services.GetRequiredService<OpenAiCompatibleModelInvoker>());
+builder.Services.AddSingleton<IModelInvoker>(services => services.GetRequiredService<AnthropicModelInvoker>());
 builder.Services.AddSingleton<ILlmPlannerGateway, OpenAiCompatiblePlannerGateway>();
 builder.Services.AddSingleton<AnswerSynthesizer>();
 builder.Services.AddSingleton<BenchmarkLoader>();

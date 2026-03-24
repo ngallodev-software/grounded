@@ -42,7 +42,7 @@ ScoringService + RegressionComparer
 
 **LLM outputs are grounded, not trusted.** The synthesizer receives result rows. It cannot query the database, invent metrics, or modify the plan. The `AnswerOutputValidator` enforces required fields. Scoring checks that the answer summary contains at least one value traceable to the actual result rows.
 
-**Both LLM seams are injectable.** `ILlmPlannerGateway` and `ILlmGateway` are interfaces. The pipeline runs, tests, and evaluates in deterministic mode (no API keys or network access required). Swapping in a real OpenAI or Anthropic implementation is a one-class change.
+**Both LLM seams are injectable.** `ILlmPlannerGateway` and `ILlmGateway` are interfaces. The pipeline runs, tests, and evaluates in deterministic mode (no API keys or network access required). Planner and synthesizer can each target OpenAI-compatible or Anthropic transports independently through configuration.
 
 **Tests are integration tests.** Tests use `WebApplicationFactory` and exercise the full HTTP → service → synthesis path.
 
@@ -149,7 +149,8 @@ cp .env.example .env
 
 Fill in:
 - `POSTGRES_PASSWORD` — any strong password
-- `GROUNDED_PLANNER_API_KEY` / `GROUNDED_SYNTHESIS_API_KEY` — OpenAI API key
+- `OPENAI_API_KEY` and/or `ANTHROPIC_API_KEY` — provider API keys
+- `GROUNDED_PLANNER_PROVIDER` / `GROUNDED_SYNTHESIS_PROVIDER` — `openai` or `anthropic`
 - `CLOUDFLARE_TUNNEL_TOKEN` — from `cloudflared tunnel token <tunnel-name>` (optional; omit the `cloudflared` service if not using a tunnel)
 
 ### 2. Start all services
@@ -246,12 +247,18 @@ dotnet test Grounded.slnx
 
 | Variable | Default | Description |
 |---|---|---|
-| `GROUNDED_PLANNER_API_KEY` | — | OpenAI API key for planner |
+| `OPENAI_API_KEY` | — | Shared OpenAI-compatible API key |
+| `ANTHROPIC_API_KEY` | — | Shared Anthropic API key |
+| `GROUNDED_PLANNER_PROVIDER` | `openai` | Planner provider: `openai` or `anthropic` |
 | `GROUNDED_PLANNER_MODEL` | `gpt-4o-mini` | Planner model name |
-| `GROUNDED_PLANNER_BASE_URL` | `https://api.openai.com/v1/` | OpenAI-compatible base URL |
-| `GROUNDED_PLANNER_TIMEOUT_SECONDS` | `15` | Planner request timeout |
-| `GROUNDED_SYNTHESIS_API_KEY` | — | OpenAI API key for synthesizer |
+| `GROUNDED_PLANNER_TIMEOUT_SECONDS` | `15` | Legacy planner timeout setting, still honored as an OpenAI fallback |
+| `GROUNDED_SYNTHESIS_PROVIDER` | `openai` | Synthesizer provider: `openai` or `anthropic` |
 | `GROUNDED_SYNTHESIS_MODEL` | `gpt-4o-mini` | Synthesizer model name |
+| `GROUNDED_OPENAI_BASE_URL` | `https://api.openai.com/v1/` | OpenAI-compatible base URL |
+| `GROUNDED_OPENAI_TIMEOUT_SECONDS` | `15` | OpenAI-compatible request timeout |
+| `GROUNDED_ANTHROPIC_BASE_URL` | `https://api.anthropic.com/v1/` | Anthropic Messages API base URL |
+| `GROUNDED_ANTHROPIC_VERSION` | `2023-06-01` | Anthropic API version header |
+| `GROUNDED_ANTHROPIC_TIMEOUT_SECONDS` | `15` | Anthropic request timeout |
 | `GROUNDED_REPLAY_MODE` | `false` | Use replay fixtures instead of live LLM |
 | `CLOUDFLARE_TUNNEL_TOKEN` | — | Cloudflare Tunnel token |
 
@@ -331,7 +338,7 @@ Grounded.Api/
     AnswerSynthesizer.cs         # LLM synthesis orchestrator
     AnswerOutputValidator.cs     # Synthesis output validation
     DeterministicAnswerSynthesizerEngine.cs  # Deterministic synthesis (no API required)
-    ModelInvoker.cs              # IModelInvoker + OpenAI-compatible + replay + deterministic
+    ModelInvoker.cs              # IModelInvoker + OpenAI-compatible + Anthropic + replay + deterministic
     LlmGateway.cs                # ILlmGateway + ILlmPlannerGateway + OpenAI adapters
     OpenAiCompatiblePlannerGateway.cs  # Planner gateway with Structured Outputs
     PromptStore.cs               # Prompt loading + SHA-256 versioning

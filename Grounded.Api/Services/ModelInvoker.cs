@@ -102,9 +102,7 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
             model = RequireSetting(request.ModelEnvironmentVariable);
         }
         using var message = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
-        var apiKey = string.IsNullOrWhiteSpace(request.ApiKeyEnvironmentVariable)
-            ? RequireSetting("GROUNDED_PLANNER_API_KEY")
-            : RequireSetting(request.ApiKeyEnvironmentVariable);
+        var apiKey = ResolveApiKey("OPENAI_API_KEY", request.ApiKeyEnvironmentVariable, "GROUNDED_PLANNER_API_KEY");
         message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
         object responseFormat = request.UseStructuredOutput && request.StructuredOutputSchemaJson is not null
@@ -187,6 +185,33 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
         Environment.GetEnvironmentVariable(key)
         ?? throw new InvalidOperationException($"Environment variable '{key}' must be set for model invocation.");
 
+    private static string ResolveApiKey(string preferredKey, string? stageSpecificKey, string legacyFallbackKey)
+    {
+        var value = Environment.GetEnvironmentVariable(preferredKey);
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            return value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(stageSpecificKey))
+        {
+            value = Environment.GetEnvironmentVariable(stageSpecificKey);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        value = Environment.GetEnvironmentVariable(legacyFallbackKey);
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            return value;
+        }
+
+        throw new InvalidOperationException(
+            $"Environment variable '{preferredKey}' must be set for provider invocation.");
+    }
+
     private sealed record OpenAiChatCompletionResponse(
         OpenAiChoice[]? Choices,
         OpenAiUsage? Usage);
@@ -200,6 +225,197 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
     private sealed record OpenAiUsage(
         [property: JsonPropertyName("prompt_tokens")] int PromptTokens,
         [property: JsonPropertyName("completion_tokens")] int CompletionTokens);
+}
+
+public sealed class AnthropicModelInvoker : IModelInvoker
+{
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    private readonly HttpClient _httpClient;
+
+    public AnthropicModelInvoker(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
+    public string Name => "anthropic";
+
+    public async Task<ModelInvocationResult> InvokeAsync(ModelRequest request, CancellationToken cancellationToken)
+    {
+        var requestedAt = DateTimeOffset.UtcNow;
+        var model = RequireSetting(request.ModelEnvironmentVariable);
+        using var message = new HttpRequestMessage(HttpMethod.Post, "messages");
+        var apiKey = ResolveApiKey("ANTHROPIC_API_KEY", request.ApiKeyEnvironmentVariable);
+        message.Headers.Add("x-api-key", apiKey);
+        message.Headers.Add("anthropic-version", Environment.GetEnvironmentVariable("GROUNDED_ANTHROPIC_VERSION") ?? "2023-06-01");
+
+        var requestBody = BuildRequestBody(model, request);
+        message.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(message, cancellationToken);
+        }
+        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.Timeout, exception.Message));
+        }
+        catch (HttpRequestException exception)
+        {
+            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.TransportFailure, exception.Message));
+        }
+
+        var respondedAt = DateTimeOffset.UtcNow;
+        var payload = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, payload));
+        }
+
+        AnthropicMessageResponse? completionResponse;
+        try
+        {
+            completionResponse = JsonSerializer.Deserialize<AnthropicMessageResponse>(payload, SerializerOptions);
+        }
+        catch (JsonException exception)
+        {
+            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, exception.Message));
+        }
+
+        var content = ExtractContent(completionResponse, request.UseStructuredOutput);
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, "provider returned no message content"));
+        }
+
+        return new ModelInvocationResult(
+            true,
+            new ModelResponse(
+                content,
+                "anthropic",
+                model,
+                requestedAt,
+                respondedAt,
+                new ModelUsage(
+                    completionResponse?.Usage?.InputTokens ?? 0,
+                    completionResponse?.Usage?.OutputTokens ?? 0)),
+            null);
+    }
+
+    private static object BuildRequestBody(string model, ModelRequest request)
+    {
+        if (request.UseStructuredOutput && request.StructuredOutputSchemaJson is not null)
+        {
+            return new
+            {
+                model,
+                max_tokens = 500,
+                temperature = 0,
+                system = request.PromptText,
+                messages = new[]
+                {
+                    new
+                    {
+                        role = "user",
+                        content = "Return the structured result by calling the output tool exactly once."
+                    }
+                },
+                tools = new[]
+                {
+                    new
+                    {
+                        name = request.StructuredOutputSchemaName ?? "response",
+                        description = "Return the structured response payload.",
+                        input_schema = JsonSerializer.Deserialize<object>(request.StructuredOutputSchemaJson)
+                    }
+                },
+                tool_choice = new
+                {
+                    type = "tool",
+                    name = request.StructuredOutputSchemaName ?? "response",
+                    disable_parallel_tool_use = true
+                }
+            };
+        }
+
+        return new
+        {
+            model,
+            max_tokens = 500,
+            temperature = 0,
+            system = request.PromptText,
+            messages = new[]
+            {
+                new
+                {
+                    role = "user",
+                    content = "Return the requested response."
+                }
+            }
+        };
+    }
+
+    private static string? ExtractContent(AnthropicMessageResponse? response, bool useStructuredOutput)
+    {
+        if (response?.Content is null || response.Content.Length == 0)
+        {
+            return null;
+        }
+
+        if (useStructuredOutput)
+        {
+            var toolBlock = response.Content.FirstOrDefault(block => string.Equals(block.Type, "tool_use", StringComparison.OrdinalIgnoreCase));
+            if (toolBlock?.Input is not null)
+            {
+                return JsonSerializer.Serialize(toolBlock.Input);
+            }
+        }
+
+        var textBlock = response.Content.FirstOrDefault(block => string.Equals(block.Type, "text", StringComparison.OrdinalIgnoreCase));
+        return textBlock?.Text;
+    }
+
+    private static string RequireSetting(string key) =>
+        Environment.GetEnvironmentVariable(key)
+        ?? throw new InvalidOperationException($"Environment variable '{key}' must be set for model invocation.");
+
+    private static string ResolveApiKey(string preferredKey, string? stageSpecificKey)
+    {
+        var value = Environment.GetEnvironmentVariable(preferredKey);
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            return value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(stageSpecificKey))
+        {
+            value = Environment.GetEnvironmentVariable(stageSpecificKey);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"Environment variable '{preferredKey}' must be set for provider invocation.");
+    }
+
+    private sealed record AnthropicMessageResponse(
+        AnthropicContentBlock[]? Content,
+        AnthropicUsage? Usage);
+
+    private sealed record AnthropicContentBlock(
+        string? Type,
+        string? Text,
+        JsonElement? Input);
+
+    private sealed record AnthropicUsage(
+        [property: JsonPropertyName("input_tokens")] int InputTokens,
+        [property: JsonPropertyName("output_tokens")] int OutputTokens);
 }
 
 public sealed class ReplayModelInvoker : IModelInvoker

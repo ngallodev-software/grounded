@@ -42,7 +42,7 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
                 null);
         }
 
-        var invokerName = IsReplayEnabled() ? "replay" : "openai_compatible";
+        var invokerName = ModelProviderSelector.ResolveInvokerName("planner");
         var invocation = await _modelInvokerResolver.GetRequired(invokerName).InvokeAsync(
             new ModelRequest(
                 invokerName,
@@ -60,9 +60,14 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
 
         if (!invocation.IsSuccess || invocation.Response is null)
         {
+            var provider = ModelProviderSelector.ResolveProvider("planner") switch
+            {
+                ModelProvider.Anthropic => "anthropic",
+                _ => "openai_compatible"
+            };
             return Failure(
                 prompt,
-                "openai_compatible",
+                provider,
                 Environment.GetEnvironmentVariable("GROUNDED_PLANNER_MODEL") ?? "unknown",
                 DateTimeOffset.UtcNow,
                 DateTimeOffset.UtcNow,
@@ -196,6 +201,4 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
             parseResult.RepairedContent,
             parseResult.QueryPlan is null ? null : JsonSerializer.Serialize(parseResult.QueryPlan, _serializerOptions));
 
-    private static bool IsReplayEnabled() =>
-        string.Equals(Environment.GetEnvironmentVariable("GROUNDED_REPLAY_MODE"), "true", StringComparison.OrdinalIgnoreCase);
 }

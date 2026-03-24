@@ -86,7 +86,7 @@ public sealed class AnswerSynthesizer
             _outputValidator.Validate(payload, request);
             var answer = new AnswerDto(payload.Summary, payload.KeyPoints, payload.TableIncluded);
             var trace = new SynthesizerTrace(
-                "deterministic",
+                response.Provider,
                 prompt.Checksum,
                 response.ModelName,
                 response.RequestedAt,
@@ -99,7 +99,7 @@ public sealed class AnswerSynthesizer
                 prompt.PromptKey,
                 prompt.Version,
                 prompt.Checksum,
-                "deterministic",
+                response.Provider,
                 response.ModelName,
                 response.RequestedAt,
                 response.RespondedAt,
@@ -116,7 +116,7 @@ public sealed class AnswerSynthesizer
         {
             var fallback = new AnswerDto("Unable to synthesize an answer from the provided data.", Array.Empty<string>(), normalizedRows.Count > 1);
             var trace = new SynthesizerTrace(
-                "deterministic",
+                response.Provider,
                 prompt.Checksum,
                 response.ModelName,
                 response.RequestedAt,
@@ -129,7 +129,7 @@ public sealed class AnswerSynthesizer
                 prompt.PromptKey,
                 prompt.Version,
                 prompt.Checksum,
-                "deterministic",
+                response.Provider,
                 response.ModelName,
                 response.RequestedAt,
                 response.RespondedAt,
