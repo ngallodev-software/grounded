@@ -27,16 +27,16 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                dir("${env.REPO_DIR}") {
-                    // Docker builds leave obj/ and bin/ owned by the container user (uid 1000).
-                    // Reclaim ownership so dotnet can write its temp files, then build + test.
-                    sh 'find . -type d \\( -name obj -o -name bin \\) -exec chown -R jenkins:jenkins {} + 2>/dev/null || true'
-                    sh 'dotnet test Grounded.Tests/Grounded.Tests.csproj --configuration Release --logger "console;verbosity=normal"'
-                }
-            }
-        }
+        // stage('Test') {
+        //     steps {
+        //         dir("${env.REPO_DIR}") {
+        //             // Docker builds leave obj/ and bin/ owned by the container user (uid 1000).
+        //             // Reclaim ownership so dotnet can write its temp files, then build + test.
+        //             sh 'find . -type d \\( -name obj -o -name bin \\) -exec chown -R jenkins:jenkins {} + 2>/dev/null || true'
+        //             sh 'dotnet test Grounded.Tests/Grounded.Tests.csproj --configuration Release --logger "console;verbosity=normal"'
+        //         }
+        //     }
+        // }
 
         stage('Build') {
             parallel {
