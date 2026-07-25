@@ -67,7 +67,7 @@ pipeline {
                     sh "docker tag llm-integration-demo-api:latest llm-integration-demo-api:${tag}"
                     sh "docker tag llm-integration-demo-ui:latest  llm-integration-demo-ui:${tag}"
 
-                    sh "mkdir -p ${env.REPO_DIR}/ci-artifacts"
+                    sh "mkdir -p ${env.REPO_DIR}/ci-artifacts && chmod 775 ${env.REPO_DIR}/ci-artifacts"
                     // Save to both the persistent repo dir and the workspace so archiveArtifacts can find them
                     sh "docker save llm-integration-demo-api:${tag} | gzip > ${env.REPO_DIR}/ci-artifacts/api-${tag}.tar.gz"
                     sh "docker save llm-integration-demo-ui:${tag}  | gzip > ${env.REPO_DIR}/ci-artifacts/ui-${tag}.tar.gz"
