@@ -37,6 +37,7 @@ public sealed class NpgsqlEvalRepository : IEvalRepository
                 planner_prompt_version,
                 synthesizer_prompt_version,
                 score,
+                provider_stats_json,
                 case_results_json,
                 comparison_json
             )
@@ -47,6 +48,7 @@ public sealed class NpgsqlEvalRepository : IEvalRepository
                 @planner_prompt_version,
                 @synthesizer_prompt_version,
                 @score,
+                @provider_stats_json,
                 @case_results_json,
                 @comparison_json
             )
@@ -57,6 +59,7 @@ public sealed class NpgsqlEvalRepository : IEvalRepository
         command.Parameters.AddWithValue("planner_prompt_version", run.PlannerPromptVersion);
         command.Parameters.AddWithValue("synthesizer_prompt_version", run.SynthesizerPromptVersion);
         command.Parameters.AddWithValue("score", run.Score);
+        command.Parameters.Add("provider_stats_json", NpgsqlDbType.Jsonb).Value = JsonSerializer.Serialize(run.ProviderStats, SerializerOptions);
         command.Parameters.Add("case_results_json", NpgsqlDbType.Jsonb).Value = JsonSerializer.Serialize(run.CaseResults, SerializerOptions);
         command.Parameters.Add("comparison_json", NpgsqlDbType.Jsonb).Value = JsonSerializer.Serialize(run.Comparison, SerializerOptions);
         await command.ExecuteNonQueryAsync(cancellationToken);

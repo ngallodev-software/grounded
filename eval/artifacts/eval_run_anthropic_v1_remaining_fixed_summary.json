@@ -1,0 +1,71 @@
+{
+  "score": 0.48,
+  "summary": {
+    "plannerValidityRate": 1,
+    "executionSuccessRate": 0.6,
+    "groundingRate": 0,
+    "averageLatencyMs": 2650.6,
+    "averageTokensIn": 6780.8,
+    "averageTokensOut": 363,
+    "failureCounts": {
+      "unsupported_request": 2
+    }
+  },
+  "providerStats": [
+    {
+      "provider": "anthropic",
+      "stage": "planner",
+      "requestCount": 5,
+      "successCount": 3,
+      "failureCount": 2,
+      "rateLimitedCount": 0,
+      "retryCount": 0,
+      "totalQueueWaitMs": 0,
+      "totalRetryDelayMs": 0,
+      "totalEstimatedInputTokens": 18426,
+      "totalTokensIn": 27876,
+      "totalTokensOut": 1288
+    },
+    {
+      "provider": "anthropic",
+      "stage": "synthesizer",
+      "requestCount": 3,
+      "successCount": 3,
+      "failureCount": 0,
+      "rateLimitedCount": 0,
+      "retryCount": 0,
+      "totalQueueWaitMs": 0,
+      "totalRetryDelayMs": 0,
+      "totalEstimatedInputTokens": 4194,
+      "totalTokensIn": 6028,
+      "totalTokensOut": 527
+    }
+  ],
+  "cases": [
+    {
+      "caseId": "time_monthly_revenue_6m",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "time_monthly_aov",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "unsupported_forecast",
+      "passed": false,
+      "failureCategory": "unsupported_request"
+    },
+    {
+      "caseId": "unsupported_anomaly",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "adversarial_schema_escape",
+      "passed": false,
+      "failureCategory": "unsupported_request"
+    }
+  ]
+}

@@ -35,6 +35,7 @@ public sealed class EvalRunner
         var benchmarkCases = _benchmarkLoader.LoadCases();
         var startedAt = DateTimeOffset.UtcNow;
         var results = new List<BenchmarkCaseResult>();
+        var providerStats = new Dictionary<(string Provider, string Stage), ProviderStatsAccumulator>();
 
         foreach (var benchmarkCase in benchmarkCases)
         {
@@ -70,6 +71,8 @@ public sealed class EvalRunner
                     : Math.Max(0, (long)(serviceResult.Response.Trace.Synthesizer.RespondedAt - serviceResult.Response.Trace.Synthesizer.RequestedAt).TotalMilliseconds);
                 totalTokensIn = (serviceResult.Response.Trace?.Planner?.TokensIn ?? 0) + (serviceResult.Response.Trace?.Synthesizer?.TokensIn ?? 0);
                 totalTokensOut = (serviceResult.Response.Trace?.Planner?.TokensOut ?? 0) + (serviceResult.Response.Trace?.Synthesizer?.TokensOut ?? 0);
+                Accumulate(providerStats, "planner", serviceResult.Response.Trace?.Planner);
+                Accumulate(providerStats, "synthesizer", serviceResult.Response.Trace?.Synthesizer);
 
                 if (answer is not null)
                 {
@@ -110,6 +113,11 @@ public sealed class EvalRunner
         var completedAt = DateTimeOffset.UtcNow;
         var averageScore = _scoringService.Aggregate(results);
         var summary = _scoringService.BuildSummary(results);
+        var aggregatedProviderStats = providerStats
+            .OrderBy(static entry => entry.Key.Provider, StringComparer.Ordinal)
+            .ThenBy(static entry => entry.Key.Stage, StringComparer.Ordinal)
+            .Select(static entry => entry.Value.ToStats(entry.Key.Provider, entry.Key.Stage))
+            .ToArray();
         var plannerPromptVersion = _configuration["GROUNDED_PLANNER_PROMPT_VERSION"] ?? "v2";
         var plannerPrompt = _promptStore.GetVersionedPrompt("planner", plannerPromptVersion);
         var prompt = _promptStore.GetVersionedPrompt("answer-synthesizer", "v1");
@@ -121,6 +129,7 @@ public sealed class EvalRunner
             $"{prompt.PromptKey}/{prompt.Version}:{prompt.Checksum}",
             averageScore,
             summary,
+            aggregatedProviderStats,
             results);
 
         var comparison = _regressionComparer.CompareAndPersist(run);
@@ -132,10 +141,45 @@ public sealed class EvalRunner
                 run.PlannerPromptVersion,
                 run.SynthesizerPromptVersion,
                 run.Score,
+                run.ProviderStats,
                 run.CaseResults,
                 comparison),
             cancellationToken);
         return (run, comparison);
+    }
+
+    private static void Accumulate(IDictionary<(string Provider, string Stage), ProviderStatsAccumulator> stats, string stage, PlannerTrace? trace)
+    {
+        if (trace is null)
+        {
+            return;
+        }
+
+        var key = (trace.Provider, stage);
+        if (!stats.TryGetValue(key, out var accumulator))
+        {
+            accumulator = new ProviderStatsAccumulator();
+            stats[key] = accumulator;
+        }
+
+        accumulator.Add(trace.FailureCategory == FailureCategories.None, trace.RateLimited, trace.RetryCount, trace.QueueWaitMs, trace.RetryDelayMs, trace.EstimatedInputTokens, trace.TokensIn, trace.TokensOut);
+    }
+
+    private static void Accumulate(IDictionary<(string Provider, string Stage), ProviderStatsAccumulator> stats, string stage, SynthesizerTrace? trace)
+    {
+        if (trace is null)
+        {
+            return;
+        }
+
+        var key = (trace.Provider, stage);
+        if (!stats.TryGetValue(key, out var accumulator))
+        {
+            accumulator = new ProviderStatsAccumulator();
+            stats[key] = accumulator;
+        }
+
+        accumulator.Add(trace.FailureCategory == FailureCategories.None, trace.RateLimited, trace.RetryCount, trace.QueueWaitMs, trace.RetryDelayMs, trace.EstimatedInputTokens, trace.TokensIn, trace.TokensOut);
     }
 
     private static bool IsAnswerGrounded(string summary, IReadOnlyList<IReadOnlyDictionary<string, object?>>? rows)
@@ -163,5 +207,59 @@ public sealed class EvalRunner
         }
 
         return false;
+    }
+
+    private sealed class ProviderStatsAccumulator
+    {
+        public int RequestCount { get; private set; }
+        public int SuccessCount { get; private set; }
+        public int FailureCount { get; private set; }
+        public int RateLimitedCount { get; private set; }
+        public int RetryCount { get; private set; }
+        public long TotalQueueWaitMs { get; private set; }
+        public long TotalRetryDelayMs { get; private set; }
+        public int TotalEstimatedInputTokens { get; private set; }
+        public int TotalTokensIn { get; private set; }
+        public int TotalTokensOut { get; private set; }
+
+        public void Add(bool success, bool rateLimited, int retryCount, long queueWaitMs, long retryDelayMs, int estimatedInputTokens, int tokensIn, int tokensOut)
+        {
+            RequestCount++;
+            if (success)
+            {
+                SuccessCount++;
+            }
+            else
+            {
+                FailureCount++;
+            }
+
+            if (rateLimited)
+            {
+                RateLimitedCount++;
+            }
+
+            RetryCount += retryCount;
+            TotalQueueWaitMs += queueWaitMs;
+            TotalRetryDelayMs += retryDelayMs;
+            TotalEstimatedInputTokens += estimatedInputTokens;
+            TotalTokensIn += tokensIn;
+            TotalTokensOut += tokensOut;
+        }
+
+        public EvalProviderStats ToStats(string provider, string stage) =>
+            new(
+                provider,
+                stage,
+                RequestCount,
+                SuccessCount,
+                FailureCount,
+                RateLimitedCount,
+                RetryCount,
+                TotalQueueWaitMs,
+                TotalRetryDelayMs,
+                TotalEstimatedInputTokens,
+                TotalTokensIn,
+                TotalTokensOut);
     }
 }

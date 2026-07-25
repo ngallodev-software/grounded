@@ -74,7 +74,8 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
                 0,
                 0,
                 invocation.Failure?.Category ?? FailureCategories.ProviderError,
-                invocation.Failure?.Message ?? "planner invocation failed");
+                invocation.Failure?.Message ?? "planner invocation failed",
+                invocation.Failure?.Telemetry);
         }
 
         var response = invocation.Response;
@@ -84,7 +85,8 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
             response.ModelName,
             response.RequestedAt,
             response.RespondedAt,
-            new PlannerUsage(response.Usage.TokensIn, response.Usage.TokensOut));
+            new PlannerUsage(response.Usage.TokensIn, response.Usage.TokensOut),
+            response.Telemetry);
         var parsed = _repairService.TryRepair(_parser.Parse(response.Content));
         if (!parsed.IsSuccess)
         {
@@ -118,8 +120,10 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
         int tokensIn,
         int tokensOut,
         string failureCategory,
-        string failureMessage)
+        string failureMessage,
+        ProviderTelemetry? telemetry = null)
     {
+        var renderedPromptEstimatedTokens = EstimatePromptTokens(prompt.RenderedPrompt);
         var trace = new PlannerTrace(
             prompt.Prompt.PromptKey,
             prompt.Prompt.Version,
@@ -136,7 +140,16 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
             false,
             false,
             failureCategory,
-            failureMessage);
+            failureMessage,
+            telemetry?.HttpStatusCode,
+            telemetry?.RetryCount ?? 0,
+            telemetry?.QueueWaitMs ?? 0,
+            telemetry?.RetryDelayMs ?? 0,
+            telemetry?.EstimatedInputTokens ?? renderedPromptEstimatedTokens,
+            telemetry?.RetryAfterMs,
+            telemetry?.RateLimited ?? false,
+            prompt.RenderedPrompt.Length,
+            renderedPromptEstimatedTokens);
         var attempt = new PersistedPlannerAttempt(
             prompt.Prompt.PromptKey,
             prompt.Prompt.Version,
@@ -154,6 +167,15 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
             false,
             failureCategory,
             failureMessage,
+            telemetry?.HttpStatusCode,
+            telemetry?.RetryCount ?? 0,
+            telemetry?.QueueWaitMs ?? 0,
+            telemetry?.RetryDelayMs ?? 0,
+            telemetry?.EstimatedInputTokens ?? renderedPromptEstimatedTokens,
+            telemetry?.RetryAfterMs,
+            telemetry?.RateLimited ?? false,
+            prompt.RenderedPrompt.Length,
+            renderedPromptEstimatedTokens,
             null,
             null,
             null);
@@ -177,7 +199,16 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
             parseResult.RepairSucceeded,
             cacheHit,
             parseResult.FailureCategory,
-            parseResult.FailureMessage);
+            parseResult.FailureMessage,
+            cacheHit ? null : rawResponse.Telemetry.HttpStatusCode,
+            cacheHit ? 0 : rawResponse.Telemetry.RetryCount,
+            cacheHit ? 0 : rawResponse.Telemetry.QueueWaitMs,
+            cacheHit ? 0 : rawResponse.Telemetry.RetryDelayMs,
+            cacheHit ? 0 : rawResponse.Telemetry.EstimatedInputTokens,
+            cacheHit ? null : rawResponse.Telemetry.RetryAfterMs,
+            cacheHit ? false : rawResponse.Telemetry.RateLimited,
+            prompt.RenderedPrompt.Length,
+            EstimatePromptTokens(prompt.RenderedPrompt));
 
     private PersistedPlannerAttempt CreateAttempt(PlannerPromptRenderResult prompt, PlannerRawResponse rawResponse, PlannerParseResult parseResult, bool cacheHit) =>
         new(
@@ -197,8 +228,20 @@ public sealed class OpenAiCompatiblePlannerGateway : ILlmPlannerGateway
             cacheHit,
             parseResult.FailureCategory,
             parseResult.FailureMessage,
+            cacheHit ? null : rawResponse.Telemetry.HttpStatusCode,
+            cacheHit ? 0 : rawResponse.Telemetry.RetryCount,
+            cacheHit ? 0 : rawResponse.Telemetry.QueueWaitMs,
+            cacheHit ? 0 : rawResponse.Telemetry.RetryDelayMs,
+            cacheHit ? 0 : rawResponse.Telemetry.EstimatedInputTokens,
+            cacheHit ? null : rawResponse.Telemetry.RetryAfterMs,
+            cacheHit ? false : rawResponse.Telemetry.RateLimited,
+            prompt.RenderedPrompt.Length,
+            EstimatePromptTokens(prompt.RenderedPrompt),
             parseResult.OriginalContent,
             parseResult.RepairedContent,
             parseResult.QueryPlan is null ? null : JsonSerializer.Serialize(parseResult.QueryPlan, _serializerOptions));
+
+    private static int EstimatePromptTokens(string prompt) =>
+        Math.Max(1, (int)Math.Ceiling((prompt?.Length ?? 0) / 4d));
 
 }

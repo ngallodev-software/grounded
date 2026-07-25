@@ -49,7 +49,8 @@ public sealed record PlannerRawResponse(
     string ModelName,
     DateTimeOffset RequestedAt,
     DateTimeOffset RespondedAt,
-    PlannerUsage Usage);
+    PlannerUsage Usage,
+    ProviderTelemetry Telemetry);
 
 public sealed record PlannerParseResult(
     bool IsSuccess,
@@ -84,4 +85,13 @@ public sealed record PlannerTrace(
     bool RepairSucceeded,
     bool CacheHit,
     string FailureCategory,
-    string? FailureMessage);
+    string? FailureMessage,
+    int? HttpStatusCode,
+    int RetryCount,
+    long QueueWaitMs,
+    long RetryDelayMs,
+    int EstimatedInputTokens,
+    int? RetryAfterMs,
+    bool RateLimited,
+    int RenderedPromptCharacters,
+    int RenderedPromptEstimatedTokens);

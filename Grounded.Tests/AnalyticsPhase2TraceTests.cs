@@ -121,6 +121,7 @@ public sealed class AnalyticsPhase2TraceTests
             Assert.Single(evalRepository.Items);
             Assert.Equal(run.RunId, evalRepository.Items[0].RunId);
             Assert.NotEmpty(evalRepository.Items[0].CaseResults);
+            Assert.NotEmpty(run.ProviderStats);
         }
         finally
         {
@@ -164,7 +165,16 @@ public sealed class AnalyticsPhase2TraceTests
             false,
             false,
             failureCategory,
-            failureMessage);
+            failureMessage,
+            HttpStatusCode: null,
+            RetryCount: 0,
+            QueueWaitMs: 0,
+            RetryDelayMs: 10,
+            EstimatedInputTokens: 0,
+            RetryAfterMs: null,
+            RateLimited: false,
+            RenderedPromptCharacters: 40,
+            RenderedPromptEstimatedTokens: 10);
 
     private static PersistedPlannerAttempt CreateAttempt(PlannerTrace trace, QueryPlan? plan) =>
         new(
@@ -184,9 +194,18 @@ public sealed class AnalyticsPhase2TraceTests
             trace.CacheHit,
             trace.FailureCategory,
             trace.FailureMessage,
-            null,
-            null,
-            plan is null ? null : System.Text.Json.JsonSerializer.Serialize(plan));
+            trace.HttpStatusCode,
+            trace.RetryCount,
+            trace.QueueWaitMs,
+            trace.RetryDelayMs,
+            trace.EstimatedInputTokens,
+            trace.RetryAfterMs,
+            trace.RateLimited,
+            trace.RenderedPromptCharacters,
+            trace.RenderedPromptEstimatedTokens,
+            RawResponse: null,
+            RepairedResponse: null,
+            ParsedQueryPlanJson: plan is null ? null : System.Text.Json.JsonSerializer.Serialize(plan));
 
     private sealed class StubPlannerGateway : ILlmPlannerGateway
     {
@@ -205,14 +224,14 @@ public sealed class AnalyticsPhase2TraceTests
         public Task<LlmAnswerResponse> SendAnswerRequestAsync(PromptDefinition prompt, AnswerSynthesizerRequest request, CancellationToken cancellationToken)
         {
             var content = """{"summary":"Revenue was 123","keyPoints":["123"],"tableIncluded":false}""";
-            return Task.FromResult(new LlmAnswerResponse(content, "deterministic", "deterministic-local", 10, 5, FixedNow, FixedNow));
+            return Task.FromResult(new LlmAnswerResponse(content, "deterministic", "deterministic-local", 10, 5, FixedNow, FixedNow, new ProviderTelemetry(null, 0, 0, 0, 10, null, false)));
         }
     }
 
     private sealed class InvalidJsonLlmGateway : ILlmGateway
     {
         public Task<LlmAnswerResponse> SendAnswerRequestAsync(PromptDefinition prompt, AnswerSynthesizerRequest request, CancellationToken cancellationToken) =>
-            Task.FromResult(new LlmAnswerResponse("{not-json", "deterministic", "deterministic-local", 10, 5, FixedNow, FixedNow));
+            Task.FromResult(new LlmAnswerResponse("{not-json", "deterministic", "deterministic-local", 10, 5, FixedNow, FixedNow, new ProviderTelemetry(null, 0, 0, 0, 10, null, false)));
     }
 
     private sealed class FixedClock : IUtcClock

@@ -42,6 +42,20 @@ public sealed record EvalRunSummary(
     decimal AverageTokensOut,
     IReadOnlyDictionary<string, int> FailureCounts);
 
+public sealed record EvalProviderStats(
+    string Provider,
+    string Stage,
+    int RequestCount,
+    int SuccessCount,
+    int FailureCount,
+    int RateLimitedCount,
+    int RetryCount,
+    long TotalQueueWaitMs,
+    long TotalRetryDelayMs,
+    int TotalEstimatedInputTokens,
+    int TotalTokensIn,
+    int TotalTokensOut);
+
 public sealed record EvalRun(
     string RunId,
     DateTimeOffset StartedAt,
@@ -50,6 +64,7 @@ public sealed record EvalRun(
     string SynthesizerPromptVersion,
     decimal Score,
     EvalRunSummary Summary,
+    IReadOnlyList<EvalProviderStats> ProviderStats,
     IReadOnlyList<BenchmarkCaseResult> CaseResults);
 
 public sealed record RegressionComparisonResult(

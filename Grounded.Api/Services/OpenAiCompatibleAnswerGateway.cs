@@ -48,7 +48,7 @@ public sealed class OpenAiCompatibleAnswerGateway : ILlmGateway
 
         if (!result.IsSuccess || result.Response is null)
         {
-            throw new InvalidOperationException(result.Failure?.Message ?? "answer model invocation failed");
+            throw new LlmGatewayException(result.Failure?.Message ?? "answer model invocation failed", result.Failure);
         }
 
         return new LlmAnswerResponse(
@@ -58,6 +58,7 @@ public sealed class OpenAiCompatibleAnswerGateway : ILlmGateway
             result.Response.Usage.TokensIn,
             result.Response.Usage.TokensOut,
             result.Response.RequestedAt,
-            result.Response.RespondedAt);
+            result.Response.RespondedAt,
+            result.Response.Telemetry);
     }
 }

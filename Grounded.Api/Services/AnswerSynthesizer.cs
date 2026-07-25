@@ -47,26 +47,84 @@ public sealed class AnswerSynthesizer
         {
             throw;
         }
+        catch (LlmGatewayException ex)
+        {
+            var now = DateTimeOffset.UtcNow;
+            var telemetry = ex.Failure?.Telemetry;
+            var failureCategory = ex.Failure?.Category ?? FailureCategories.SynthesisFailure;
+            var providerName = ResolveConfiguredProviderName();
+            var modelName = Environment.GetEnvironmentVariable("GROUNDED_SYNTHESIS_MODEL") ?? "unknown";
+            var fallback = new AnswerDto("Unable to synthesize an answer from the provided data.", Array.Empty<string>(), normalizedRows.Count > 1);
+            var trace = new SynthesizerTrace(
+                providerName,
+                prompt.Checksum,
+                modelName,
+                now,
+                now,
+                0,
+                0,
+                failureCategory,
+                ex.Message,
+                telemetry?.HttpStatusCode,
+                telemetry?.RetryCount ?? 0,
+                telemetry?.QueueWaitMs ?? 0,
+                telemetry?.RetryDelayMs ?? 0,
+                telemetry?.EstimatedInputTokens ?? 0,
+                telemetry?.RetryAfterMs,
+                telemetry?.RateLimited ?? false);
+            var attempt = new PersistedSynthesisAttempt(
+                prompt.PromptKey,
+                prompt.Version,
+                prompt.Checksum,
+                providerName,
+                modelName,
+                now,
+                now,
+                0,
+                0,
+                0,
+                failureCategory,
+                ex.Message,
+                telemetry?.HttpStatusCode,
+                telemetry?.RetryCount ?? 0,
+                telemetry?.QueueWaitMs ?? 0,
+                telemetry?.RetryDelayMs ?? 0,
+                telemetry?.EstimatedInputTokens ?? 0,
+                telemetry?.RetryAfterMs,
+                telemetry?.RateLimited ?? false,
+                null,
+                JsonSerializer.Serialize(fallback, _serializerOptions));
+            return (fallback, trace, attempt);
+        }
         catch (Exception ex)
         {
             var now = DateTimeOffset.UtcNow;
+            var providerName = ResolveConfiguredProviderName();
+            var modelName = Environment.GetEnvironmentVariable("GROUNDED_SYNTHESIS_MODEL") ?? "unknown";
             var fallback = new AnswerDto("Unable to synthesize an answer from the provided data.", Array.Empty<string>(), normalizedRows.Count > 1);
             var trace = new SynthesizerTrace(
-                "unavailable",
+                providerName,
                 prompt.Checksum,
-                "unavailable",
+                modelName,
                 now,
                 now,
                 0,
                 0,
                 FailureCategories.SynthesisFailure,
-                ex.Message);
+                ex.Message,
+                null,
+                0,
+                0,
+                0,
+                0,
+                null,
+                false);
             var attempt = new PersistedSynthesisAttempt(
                 prompt.PromptKey,
                 prompt.Version,
                 prompt.Checksum,
-                "unavailable",
-                "unavailable",
+                providerName,
+                modelName,
                 now,
                 now,
                 0,
@@ -74,6 +132,13 @@ public sealed class AnswerSynthesizer
                 0,
                 FailureCategories.SynthesisFailure,
                 ex.Message,
+                null,
+                0,
+                0,
+                0,
+                0,
+                null,
+                false,
                 null,
                 JsonSerializer.Serialize(fallback, _serializerOptions));
             return (fallback, trace, attempt);
@@ -94,7 +159,14 @@ public sealed class AnswerSynthesizer
                 response.TokensIn,
                 response.TokensOut,
                 FailureCategories.None,
-                null);
+                null,
+                response.Telemetry.HttpStatusCode,
+                response.Telemetry.RetryCount,
+                response.Telemetry.QueueWaitMs,
+                response.Telemetry.RetryDelayMs,
+                response.Telemetry.EstimatedInputTokens,
+                response.Telemetry.RetryAfterMs,
+                response.Telemetry.RateLimited);
             var attempt = new PersistedSynthesisAttempt(
                 prompt.PromptKey,
                 prompt.Version,
@@ -108,6 +180,13 @@ public sealed class AnswerSynthesizer
                 response.TokensOut,
                 FailureCategories.None,
                 null,
+                response.Telemetry.HttpStatusCode,
+                response.Telemetry.RetryCount,
+                response.Telemetry.QueueWaitMs,
+                response.Telemetry.RetryDelayMs,
+                response.Telemetry.EstimatedInputTokens,
+                response.Telemetry.RetryAfterMs,
+                response.Telemetry.RateLimited,
                 response.Content,
                 JsonSerializer.Serialize(answer, _serializerOptions));
             return (answer, trace, attempt);
@@ -124,7 +203,14 @@ public sealed class AnswerSynthesizer
                 response.TokensIn,
                 response.TokensOut,
                 FailureCategories.SynthesisFailure,
-                ex.Message);
+                ex.Message,
+                response.Telemetry.HttpStatusCode,
+                response.Telemetry.RetryCount,
+                response.Telemetry.QueueWaitMs,
+                response.Telemetry.RetryDelayMs,
+                response.Telemetry.EstimatedInputTokens,
+                response.Telemetry.RetryAfterMs,
+                response.Telemetry.RateLimited);
             var attempt = new PersistedSynthesisAttempt(
                 prompt.PromptKey,
                 prompt.Version,
@@ -138,6 +224,13 @@ public sealed class AnswerSynthesizer
                 response.TokensOut,
                 FailureCategories.SynthesisFailure,
                 ex.Message,
+                response.Telemetry.HttpStatusCode,
+                response.Telemetry.RetryCount,
+                response.Telemetry.QueueWaitMs,
+                response.Telemetry.RetryDelayMs,
+                response.Telemetry.EstimatedInputTokens,
+                response.Telemetry.RetryAfterMs,
+                response.Telemetry.RateLimited,
                 response.Content,
                 JsonSerializer.Serialize(fallback, _serializerOptions));
             return (fallback, trace, attempt);
@@ -153,4 +246,11 @@ public sealed class AnswerSynthesizer
 
         return rows.First().Keys.ToList();
     }
+
+    private static string ResolveConfiguredProviderName() =>
+        ModelProviderSelector.ResolveProvider("synthesizer") switch
+        {
+            ModelProvider.Anthropic => "anthropic",
+            _ => "openai_compatible"
+        };
 }

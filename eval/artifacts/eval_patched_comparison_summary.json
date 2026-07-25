@@ -1,0 +1,30 @@
+{
+  "anthropic_patched": {
+    "v1": {
+      "adjustedScore": 0.863,
+      "passRate": 0.9
+    },
+    "v2": {
+      "adjustedScore": 0.907,
+      "passRate": 0.967
+    },
+    "v3": {
+      "adjustedScore": 0.92,
+      "passRate": 0.933
+    }
+  },
+  "openai": {
+    "v1": {
+      "adjustedScore": 0.913,
+      "passRate": 0.967
+    },
+    "v2": {
+      "adjustedScore": 0.88,
+      "passRate": 0.933
+    },
+    "v3": {
+      "adjustedScore": 0.88,
+      "passRate": 0.933
+    }
+  }
+}

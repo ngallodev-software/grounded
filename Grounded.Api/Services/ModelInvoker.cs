@@ -72,7 +72,14 @@ public sealed class DeterministicModelInvoker : IModelInvoker
             Math.Max(1, payload.Length / 4));
         return Task.FromResult(new ModelInvocationResult(
             true,
-            new ModelResponse(payload, "deterministic", "deterministic-local", now, now, usage),
+            new ModelResponse(
+                payload,
+                "deterministic",
+                "deterministic-local",
+                now,
+                now,
+                usage,
+                new ProviderTelemetry(null, 0, 0, 0, usage.TokensIn, null, false)),
             null));
     }
 }
@@ -85,10 +92,12 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
     };
 
     private readonly HttpClient _httpClient;
+    private readonly IProviderRateLimiter _rateLimiter;
 
-    public OpenAiCompatibleModelInvoker(HttpClient httpClient)
+    public OpenAiCompatibleModelInvoker(HttpClient httpClient, IProviderRateLimiter rateLimiter)
     {
         _httpClient = httpClient;
+        _rateLimiter = rateLimiter;
     }
 
     public string Name => "openai_compatible";
@@ -96,14 +105,15 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
     public async Task<ModelInvocationResult> InvokeAsync(ModelRequest request, CancellationToken cancellationToken)
     {
         var requestedAt = DateTimeOffset.UtcNow;
+        var provider = "openai";
         var model = RequireSetting("GROUNDED_PLANNER_MODEL");
         if (!string.IsNullOrWhiteSpace(request.ModelEnvironmentVariable))
         {
             model = RequireSetting(request.ModelEnvironmentVariable);
         }
-        using var message = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
-        var apiKey = ResolveApiKey("OPENAI_API_KEY", request.ApiKeyEnvironmentVariable, "GROUNDED_PLANNER_API_KEY");
-        message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        var estimatedTokens = ModelInvocationTransport.EstimateTokens(request.PromptText, request.PayloadJson);
+        var lease = await _rateLimiter.AcquireAsync(provider, estimatedTokens, cancellationToken);
+        var options = ProviderRateLimitOptions.FromEnvironment(provider);
 
         object responseFormat = request.UseStructuredOutput && request.StructuredOutputSchemaJson is not null
             ? new
@@ -118,38 +128,41 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
             }
             : new { type = "json_object" };
 
-        message.Content = new StringContent(JsonSerializer.Serialize(new
-        {
-            model,
-            temperature = 0,
-            max_tokens = 500,
-            response_format = responseFormat,
-            messages = new[]
+        var transport = await ModelInvocationTransport.SendWithRetryAsync(
+            _httpClient,
+            provider,
+            options,
+            lease,
+            cancellationToken,
+            () =>
             {
-                new { role = "system", content = request.PromptText }
-            }
-        }), Encoding.UTF8, "application/json");
+                var message = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
+                var apiKey = ResolveApiKey("OPENAI_API_KEY", request.ApiKeyEnvironmentVariable, "GROUNDED_PLANNER_API_KEY");
+                message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                message.Content = new StringContent(JsonSerializer.Serialize(new
+                {
+                    model,
+                    temperature = 0,
+                    max_tokens = 500,
+                    response_format = responseFormat,
+                    messages = new[]
+                    {
+                        new { role = "system", content = request.PromptText }
+                    }
+                }), Encoding.UTF8, "application/json");
+                return message;
+            });
 
-        HttpResponseMessage response;
-        try
+        if (!transport.IsSuccess || transport.Response is null)
         {
-            response = await _httpClient.SendAsync(message, cancellationToken);
-        }
-        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
-        {
-            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.Timeout, exception.Message));
-        }
-        catch (HttpRequestException exception)
-        {
-            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.TransportFailure, exception.Message));
+            return new ModelInvocationResult(false, null, new ModelFailure(
+                transport.Failure?.Category ?? FailureCategories.ProviderError,
+                transport.Failure?.Message ?? "provider invocation failed",
+                transport.Telemetry));
         }
 
         var respondedAt = DateTimeOffset.UtcNow;
-        var payload = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, payload));
-        }
+        var payload = transport.Response;
 
         OpenAiChatCompletionResponse? completionResponse;
         try
@@ -158,13 +171,13 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
         }
         catch (JsonException exception)
         {
-            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, exception.Message));
+            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, exception.Message, transport.Telemetry));
         }
 
         var content = completionResponse?.Choices?.FirstOrDefault()?.Message?.Content;
         if (string.IsNullOrWhiteSpace(content))
         {
-            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, "provider returned no message content"));
+            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, "provider returned no message content", transport.Telemetry));
         }
 
         return new ModelInvocationResult(
@@ -177,7 +190,8 @@ public sealed class OpenAiCompatibleModelInvoker : IModelInvoker
                 respondedAt,
                 new ModelUsage(
                     completionResponse?.Usage?.PromptTokens ?? 0,
-                    completionResponse?.Usage?.CompletionTokens ?? 0)),
+                    completionResponse?.Usage?.CompletionTokens ?? 0),
+                transport.Telemetry),
             null);
     }
 
@@ -235,10 +249,12 @@ public sealed class AnthropicModelInvoker : IModelInvoker
     };
 
     private readonly HttpClient _httpClient;
+    private readonly IProviderRateLimiter _rateLimiter;
 
-    public AnthropicModelInvoker(HttpClient httpClient)
+    public AnthropicModelInvoker(HttpClient httpClient, IProviderRateLimiter rateLimiter)
     {
         _httpClient = httpClient;
+        _rateLimiter = rateLimiter;
     }
 
     public string Name => "anthropic";
@@ -246,35 +262,38 @@ public sealed class AnthropicModelInvoker : IModelInvoker
     public async Task<ModelInvocationResult> InvokeAsync(ModelRequest request, CancellationToken cancellationToken)
     {
         var requestedAt = DateTimeOffset.UtcNow;
+        const string provider = "anthropic";
         var model = RequireSetting(request.ModelEnvironmentVariable);
-        using var message = new HttpRequestMessage(HttpMethod.Post, "messages");
-        var apiKey = ResolveApiKey("ANTHROPIC_API_KEY", request.ApiKeyEnvironmentVariable);
-        message.Headers.Add("x-api-key", apiKey);
-        message.Headers.Add("anthropic-version", Environment.GetEnvironmentVariable("GROUNDED_ANTHROPIC_VERSION") ?? "2023-06-01");
-
+        var estimatedTokens = ModelInvocationTransport.EstimateTokens(request.PromptText, request.PayloadJson);
+        var lease = await _rateLimiter.AcquireAsync(provider, estimatedTokens, cancellationToken);
+        var options = ProviderRateLimitOptions.FromEnvironment(provider);
         var requestBody = BuildRequestBody(model, request);
-        message.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+        var transport = await ModelInvocationTransport.SendWithRetryAsync(
+            _httpClient,
+            provider,
+            options,
+            lease,
+            cancellationToken,
+            () =>
+            {
+                var message = new HttpRequestMessage(HttpMethod.Post, "messages");
+                var apiKey = ResolveApiKey("ANTHROPIC_API_KEY", request.ApiKeyEnvironmentVariable);
+                message.Headers.Add("x-api-key", apiKey);
+                message.Headers.Add("anthropic-version", Environment.GetEnvironmentVariable("GROUNDED_ANTHROPIC_VERSION") ?? "2023-06-01");
+                message.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+                return message;
+            });
 
-        HttpResponseMessage response;
-        try
+        if (!transport.IsSuccess || transport.Response is null)
         {
-            response = await _httpClient.SendAsync(message, cancellationToken);
-        }
-        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
-        {
-            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.Timeout, exception.Message));
-        }
-        catch (HttpRequestException exception)
-        {
-            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.TransportFailure, exception.Message));
+            return new ModelInvocationResult(false, null, new ModelFailure(
+                transport.Failure?.Category ?? FailureCategories.ProviderError,
+                transport.Failure?.Message ?? "provider invocation failed",
+                transport.Telemetry));
         }
 
         var respondedAt = DateTimeOffset.UtcNow;
-        var payload = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, payload));
-        }
+        var payload = transport.Response;
 
         AnthropicMessageResponse? completionResponse;
         try
@@ -283,13 +302,13 @@ public sealed class AnthropicModelInvoker : IModelInvoker
         }
         catch (JsonException exception)
         {
-            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, exception.Message));
+            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, exception.Message, transport.Telemetry));
         }
 
         var content = ExtractContent(completionResponse, request.UseStructuredOutput);
         if (string.IsNullOrWhiteSpace(content))
         {
-            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, "provider returned no message content"));
+            return new ModelInvocationResult(false, null, new ModelFailure(FailureCategories.ProviderError, "provider returned no message content", transport.Telemetry));
         }
 
         return new ModelInvocationResult(
@@ -302,7 +321,8 @@ public sealed class AnthropicModelInvoker : IModelInvoker
                 respondedAt,
                 new ModelUsage(
                     completionResponse?.Usage?.InputTokens ?? 0,
-                    completionResponse?.Usage?.OutputTokens ?? 0)),
+                    completionResponse?.Usage?.OutputTokens ?? 0),
+                transport.Telemetry),
             null);
     }
 
@@ -418,6 +438,156 @@ public sealed class AnthropicModelInvoker : IModelInvoker
         [property: JsonPropertyName("output_tokens")] int OutputTokens);
 }
 
+file sealed record TransportAttemptResult(
+    bool IsSuccess,
+    string? Response,
+    ModelFailure? Failure,
+    ProviderTelemetry Telemetry);
+
+file static class ModelInvocationTransport
+{
+    public static async Task<TransportAttemptResult> SendWithRetryAsync(
+        HttpClient httpClient,
+        string provider,
+        ProviderRateLimitOptions options,
+        ProviderLease lease,
+        CancellationToken cancellationToken,
+        Func<HttpRequestMessage> messageFactory)
+    {
+        var retryCount = 0;
+        long retryDelayMs = 0;
+        int? lastStatusCode = null;
+        int? retryAfterMs = null;
+        var rateLimited = false;
+
+        while (true)
+        {
+            using var message = messageFactory();
+            HttpResponseMessage response;
+            try
+            {
+                response = await httpClient.SendAsync(message, cancellationToken);
+            }
+            catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+            {
+                return Failure(FailureCategories.Timeout, exception.Message);
+            }
+            catch (HttpRequestException exception)
+            {
+                if (retryCount < options.MaxRetries)
+                {
+                    var delay = ComputeBackoff(options.BaseBackoffMs, retryCount, null);
+                    retryCount++;
+                    retryDelayMs += (long)delay.TotalMilliseconds;
+                    await Task.Delay(delay, cancellationToken);
+                    continue;
+                }
+
+                return Failure(FailureCategories.TransportFailure, exception.Message);
+            }
+
+            using (response)
+            {
+                var payload = await response.Content.ReadAsStringAsync(cancellationToken);
+                lastStatusCode = (int)response.StatusCode;
+                retryAfterMs = TryGetRetryAfterMs(response);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return new TransportAttemptResult(
+                        true,
+                        payload,
+                        null,
+                        BuildTelemetry(lastStatusCode, retryCount, lease.QueueWaitMs, retryDelayMs, lease.EstimatedTokens, retryAfterMs, rateLimited));
+                }
+
+                if (IsRetryable(response.StatusCode) && retryCount < options.MaxRetries)
+                {
+                    rateLimited |= response.StatusCode == System.Net.HttpStatusCode.TooManyRequests;
+                    var delay = ComputeBackoff(options.BaseBackoffMs, retryCount, retryAfterMs);
+                    retryCount++;
+                    retryDelayMs += (long)delay.TotalMilliseconds;
+                    await Task.Delay(delay, cancellationToken);
+                    continue;
+                }
+
+                return new TransportAttemptResult(
+                    false,
+                    null,
+                    new ModelFailure(FailureCategories.ProviderError, payload),
+                    BuildTelemetry(lastStatusCode, retryCount, lease.QueueWaitMs, retryDelayMs, lease.EstimatedTokens, retryAfterMs, rateLimited || response.StatusCode == System.Net.HttpStatusCode.TooManyRequests));
+            }
+        }
+
+        TransportAttemptResult Failure(string category, string message) =>
+            new(
+                false,
+                null,
+                new ModelFailure(category, message),
+                BuildTelemetry(lastStatusCode, retryCount, lease.QueueWaitMs, retryDelayMs, lease.EstimatedTokens, retryAfterMs, rateLimited));
+    }
+
+    private static ProviderTelemetry BuildTelemetry(
+        int? statusCode,
+        int retryCount,
+        long queueWaitMs,
+        long retryDelayMs,
+        int estimatedTokens,
+        int? retryAfterMs,
+        bool rateLimited) =>
+        new(
+            statusCode,
+            retryCount,
+            queueWaitMs,
+            retryDelayMs,
+            estimatedTokens,
+            retryAfterMs,
+            rateLimited);
+
+    private static bool IsRetryable(System.Net.HttpStatusCode statusCode) =>
+        statusCode == System.Net.HttpStatusCode.TooManyRequests || (int)statusCode == 529;
+
+    private static TimeSpan ComputeBackoff(int baseBackoffMs, int attempt, int? retryAfterMs)
+    {
+        if (retryAfterMs is > 0)
+        {
+            return TimeSpan.FromMilliseconds(retryAfterMs.Value);
+        }
+
+        var multiplier = Math.Pow(2, attempt);
+        var jitter = Random.Shared.Next(50, 251);
+        return TimeSpan.FromMilliseconds((baseBackoffMs * multiplier) + jitter);
+    }
+
+    private static int? TryGetRetryAfterMs(HttpResponseMessage response)
+    {
+        if (response.Headers.RetryAfter?.Delta is { } delta)
+        {
+            return Math.Max(0, (int)delta.TotalMilliseconds);
+        }
+
+        if (response.Headers.TryGetValues("retry-after-ms", out var millisecondValues) &&
+            int.TryParse(millisecondValues.FirstOrDefault(), out var milliseconds))
+        {
+            return Math.Max(0, milliseconds);
+        }
+
+        if (response.Headers.TryGetValues("retry-after", out var secondValues) &&
+            int.TryParse(secondValues.FirstOrDefault(), out var seconds))
+        {
+            return Math.Max(0, seconds * 1000);
+        }
+
+        return null;
+    }
+
+    public static int EstimateTokens(string promptText, string? payloadJson)
+    {
+        var totalLength = (promptText?.Length ?? 0) + (payloadJson?.Length ?? 0);
+        return Math.Max(1, (int)Math.Ceiling(totalLength / 4d));
+    }
+}
+
 public sealed class ReplayModelInvoker : IModelInvoker
 {
     private static readonly JsonSerializerOptions FixtureSerializerOptions = new() { PropertyNameCaseInsensitive = true };
@@ -483,7 +653,8 @@ public sealed class ReplayModelInvoker : IModelInvoker
                 fixture.ModelName,
                 now,
                 now,
-                new ModelUsage(fixture.TokensIn, fixture.TokensOut)),
+                new ModelUsage(fixture.TokensIn, fixture.TokensOut),
+                new ProviderTelemetry(null, 0, 0, 0, fixture.TokensIn, null, false)),
             null));
     }
 

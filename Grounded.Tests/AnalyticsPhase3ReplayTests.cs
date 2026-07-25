@@ -96,8 +96,8 @@ public sealed class AnalyticsPhase3ReplayTests
                 .Build();
             var comparer = new RegressionComparer(config);
             var summary = new EvalRunSummary(1m, 1m, 1m, 10m, 20m, 15m, new Dictionary<string, int>());
-            var firstRun = new EvalRun("run-1", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "planner:v1", "answer:v1", 0.8m, summary, [CreateResult("case-1", true)]);
-            var secondRun = new EvalRun("run-2", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "planner:v1", "answer:v1", 0.7m, summary, [CreateResult("case-1", false)]);
+            var firstRun = new EvalRun("run-1", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "planner:v1", "answer:v1", 0.8m, summary, Array.Empty<EvalProviderStats>(), [CreateResult("case-1", true)]);
+            var secondRun = new EvalRun("run-2", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, "planner:v1", "answer:v1", 0.7m, summary, Array.Empty<EvalProviderStats>(), [CreateResult("case-1", false)]);
 
             comparer.CompareAndPersist(firstRun);
             var comparison = comparer.CompareAndPersist(secondRun);

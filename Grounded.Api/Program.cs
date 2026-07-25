@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
+}
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -51,6 +54,7 @@ builder.Services.AddSingleton<PlannerResultCache>();
 builder.Services.AddScoped<ConversationStateService>();
 builder.Services.AddSingleton<DeterministicAnswerSynthesizerEngine>();
 builder.Services.AddSingleton<ModelInvokerResolver>();
+builder.Services.AddSingleton<IProviderRateLimiter, ProviderRateLimiter>();
 builder.Services.AddSingleton<IModelInvoker, DeterministicModelInvoker>();
 builder.Services.AddSingleton<IModelInvoker, ReplayModelInvoker>();
 builder.Services.AddSingleton<AnswerOutputValidator>();

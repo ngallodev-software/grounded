@@ -34,17 +34,28 @@ public sealed record ModelUsage(
     int TokensIn,
     int TokensOut);
 
+public sealed record ProviderTelemetry(
+    int? HttpStatusCode,
+    int RetryCount,
+    long QueueWaitMs,
+    long RetryDelayMs,
+    int EstimatedInputTokens,
+    int? RetryAfterMs,
+    bool RateLimited);
+
 public sealed record ModelResponse(
     string Content,
     string Provider,
     string ModelName,
     DateTimeOffset RequestedAt,
     DateTimeOffset RespondedAt,
-    ModelUsage Usage);
+    ModelUsage Usage,
+    ProviderTelemetry Telemetry);
 
 public sealed record ModelFailure(
     string Category,
-    string Message);
+    string Message,
+    ProviderTelemetry? Telemetry = null);
 
 public sealed record ModelInvocationResult(
     bool IsSuccess,
@@ -74,6 +85,15 @@ public sealed record PersistedPlannerAttempt(
     bool CacheHit,
     string FailureCategory,
     string? FailureMessage,
+    int? HttpStatusCode,
+    int RetryCount,
+    long QueueWaitMs,
+    long RetryDelayMs,
+    int EstimatedInputTokens,
+    int? RetryAfterMs,
+    bool RateLimited,
+    int RenderedPromptCharacters,
+    int RenderedPromptEstimatedTokens,
     string? RawResponse,
     string? RepairedResponse,
     string? ParsedQueryPlanJson);
@@ -91,6 +111,13 @@ public sealed record PersistedSynthesisAttempt(
     int TokensOut,
     string FailureCategory,
     string? FailureMessage,
+    int? HttpStatusCode,
+    int RetryCount,
+    long QueueWaitMs,
+    long RetryDelayMs,
+    int EstimatedInputTokens,
+    int? RetryAfterMs,
+    bool RateLimited,
     string? RawResponse,
     string? AnswerJson);
 
@@ -115,5 +142,6 @@ public sealed record PersistedEvalRun(
     string PlannerPromptVersion,
     string SynthesizerPromptVersion,
     decimal Score,
+    IReadOnlyList<EvalProviderStats> ProviderStats,
     IReadOnlyList<BenchmarkCaseResult> CaseResults,
     RegressionComparisonResult Comparison);

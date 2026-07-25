@@ -106,7 +106,7 @@ public sealed class ModelProviderTests
             var invoker = new AnthropicModelInvoker(new HttpClient(handler)
             {
                 BaseAddress = new Uri("https://api.anthropic.com/v1/")
-            });
+            }, new PassthroughRateLimiter());
 
             var result = await invoker.InvokeAsync(
                 new ModelRequest(
@@ -193,9 +193,16 @@ public sealed class ModelProviderTests
                     "test-model",
                     now,
                     now,
-                    new ModelUsage(10, 5)),
+                    new ModelUsage(10, 5),
+                    new ProviderTelemetry(null, 0, 0, 0, 10, null, false)),
                 null));
         }
+    }
+
+    private sealed class PassthroughRateLimiter : IProviderRateLimiter
+    {
+        public Task<ProviderLease> AcquireAsync(string provider, int estimatedTokens, CancellationToken cancellationToken) =>
+            Task.FromResult(new ProviderLease(provider, estimatedTokens, 0));
     }
 
     private sealed class StubHttpMessageHandler : HttpMessageHandler

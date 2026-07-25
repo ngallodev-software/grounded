@@ -71,9 +71,12 @@ public sealed class SchemaInitializer : IHostedService
                 planner_prompt_version TEXT NOT NULL,
                 synthesizer_prompt_version TEXT NOT NULL,
                 score NUMERIC(10,4) NOT NULL,
+                provider_stats_json JSONB NULL,
                 case_results_json JSONB NOT NULL,
                 comparison_json JSONB NOT NULL
             );
+
+            ALTER TABLE eval_runs ADD COLUMN IF NOT EXISTS provider_stats_json JSONB NULL;
 
             CREATE TABLE IF NOT EXISTS conversation_states (
                 conversation_id TEXT PRIMARY KEY,

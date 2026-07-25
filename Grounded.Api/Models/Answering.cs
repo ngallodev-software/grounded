@@ -17,7 +17,14 @@ public sealed record SynthesizerTrace(
     int TokensIn,
     int TokensOut,
     string FailureCategory,
-    string? ErrorMessage);
+    string? ErrorMessage,
+    int? HttpStatusCode,
+    int RetryCount,
+    long QueueWaitMs,
+    long RetryDelayMs,
+    int EstimatedInputTokens,
+    int? RetryAfterMs,
+    bool RateLimited);
 
 public sealed record EvaluationTrace(
     string RunId,

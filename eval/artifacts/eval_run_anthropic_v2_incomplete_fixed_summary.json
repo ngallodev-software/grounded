@@ -1,0 +1,182 @@
+{
+  "score": 0.8,
+  "summary": {
+    "plannerValidityRate": 1,
+    "executionSuccessRate": 0.852,
+    "groundingRate": 0.593,
+    "averageLatencyMs": 15558.3,
+    "averageTokensIn": 10158.48,
+    "averageTokensOut": 374.85,
+    "failureCounts": {
+      "synthesis_failure": 1,
+      "unsupported_request": 4
+    }
+  },
+  "providerStats": [
+    {
+      "provider": "anthropic",
+      "stage": "planner",
+      "requestCount": 27,
+      "successCount": 23,
+      "failureCount": 4,
+      "rateLimitedCount": 0,
+      "retryCount": 0,
+      "totalQueueWaitMs": 242521,
+      "totalRetryDelayMs": 0,
+      "totalEstimatedInputTokens": 166833,
+      "totalTokensIn": 228184,
+      "totalTokensOut": 6861
+    },
+    {
+      "provider": "anthropic",
+      "stage": "synthesizer",
+      "requestCount": 23,
+      "successCount": 22,
+      "failureCount": 1,
+      "rateLimitedCount": 0,
+      "retryCount": 0,
+      "totalQueueWaitMs": 96269,
+      "totalRetryDelayMs": 0,
+      "totalEstimatedInputTokens": 33117,
+      "totalTokensIn": 46095,
+      "totalTokensOut": 3260
+    }
+  ],
+  "cases": [
+    {
+      "caseId": "agg_revenue_last_month",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "agg_aov_qtd",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "agg_new_customers_mtd",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "agg_units_electronics",
+      "passed": true,
+      "failureCategory": "synthesis_failure"
+    },
+    {
+      "caseId": "agg_revenue_mobile",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "group_revenue_category",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "group_orders_region",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "group_units_segment",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "group_new_customers_channel",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "group_revenue_subcategory",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "group_revenue_sales_channel",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "ranking_top_products_units",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "ranking_top_categories_revenue",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "ranking_top_regions_orders",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "ranking_top_segments_aov",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "ranking_top_channels_new_customers",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "ranking_top_subcategories_revenue",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "time_monthly_revenue_6m",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "time_daily_units_30d",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "time_quarterly_revenue_last_year",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "time_monthly_new_customers",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "time_monthly_aov",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "unsupported_sql_request",
+      "passed": false,
+      "failureCategory": "unsupported_request"
+    },
+    {
+      "caseId": "unsupported_forecast",
+      "passed": false,
+      "failureCategory": "unsupported_request"
+    },
+    {
+      "caseId": "unsupported_anomaly",
+      "passed": false,
+      "failureCategory": "unsupported_request"
+    },
+    {
+      "caseId": "unsupported_multi_dim",
+      "passed": true,
+      "failureCategory": "none"
+    },
+    {
+      "caseId": "adversarial_schema_escape",
+      "passed": false,
+      "failureCategory": "unsupported_request"
+    }
+  ]
+}

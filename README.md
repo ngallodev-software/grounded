@@ -256,9 +256,17 @@ dotnet test Grounded.slnx
 | `GROUNDED_SYNTHESIS_MODEL` | `gpt-4o-mini` | Synthesizer model name |
 | `GROUNDED_OPENAI_BASE_URL` | `https://api.openai.com/v1/` | OpenAI-compatible base URL |
 | `GROUNDED_OPENAI_TIMEOUT_SECONDS` | `15` | OpenAI-compatible request timeout |
+| `GROUNDED_OPENAI_RATE_LIMIT_REQUESTS_PER_MINUTE` | `60` | Process-local outbound OpenAI request budget |
+| `GROUNDED_OPENAI_RATE_LIMIT_TOKENS_PER_MINUTE` | `120000` | Process-local outbound OpenAI token budget |
+| `GROUNDED_OPENAI_MAX_RETRIES` | `3` | Max OpenAI retries for throttles/transient transport failures |
+| `GROUNDED_OPENAI_BASE_BACKOFF_MS` | `750` | Base OpenAI retry backoff before jitter/exponential growth |
 | `GROUNDED_ANTHROPIC_BASE_URL` | `https://api.anthropic.com/v1/` | Anthropic Messages API base URL |
 | `GROUNDED_ANTHROPIC_VERSION` | `2023-06-01` | Anthropic API version header |
 | `GROUNDED_ANTHROPIC_TIMEOUT_SECONDS` | `15` | Anthropic request timeout |
+| `GROUNDED_ANTHROPIC_RATE_LIMIT_REQUESTS_PER_MINUTE` | `8` | Process-local outbound Anthropic request budget |
+| `GROUNDED_ANTHROPIC_RATE_LIMIT_TOKENS_PER_MINUTE` | `30000` | Process-local outbound Anthropic token budget |
+| `GROUNDED_ANTHROPIC_MAX_RETRIES` | `3` | Max Anthropic retries for throttles/transient transport failures |
+| `GROUNDED_ANTHROPIC_BASE_BACKOFF_MS` | `1500` | Base Anthropic retry backoff before jitter/exponential growth |
 | `GROUNDED_REPLAY_MODE` | `false` | Use replay fixtures instead of live LLM |
 | `CLOUDFLARE_TUNNEL_TOKEN` | — | Cloudflare Tunnel token |
 

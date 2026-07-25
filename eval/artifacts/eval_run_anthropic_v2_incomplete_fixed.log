@@ -1,0 +1,412 @@
+Cannot load library libgssapi_krb5.so.2 
+Error: libgssapi_krb5.so.2: cannot open shared object file: No such file or directory
+warn: Microsoft.AspNetCore.Hosting.Diagnostics[15]
+      Overriding HTTP_PORTS '8080' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://+:5252'.
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://[::]:5252
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /app
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1856.484ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1877.5471ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 834.0388ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 834.5242ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1606.007ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1606.2036ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 834.7565ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 834.9506ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1704.0202ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1704.2363ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1075.3247ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1075.5388ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1756.2423ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1756.4611ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 920.293ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 920.4906ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1847.5892ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1847.7922ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 991.3879ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 991.5648ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 2029.2933ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 2029.4638ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1110.3043ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1110.4507ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1880.9467ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1881.1075ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1363.1183ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1363.2604ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1546.6212ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1546.8285ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1252.1945ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1252.3781ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1473.9348ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1474.2856ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1664.7098ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1664.8392ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1645.2955ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1645.4373ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 2316.1909ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 2316.3283ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1489.8326ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1489.983ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1645.9949ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1646.1297ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 2454.7237ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 2454.8696ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1273.9265ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1274.0656ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1471.371ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1471.5129ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1465.5686ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1465.7065ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1537.5868ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1537.7186ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1254.3267ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1254.4943ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1998.4734ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1998.5934ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1891.9659ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1892.0932ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1508.0979ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1508.2927ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1542.5714ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1542.6882ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1649.1107ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1649.2026ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1516.8354ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1516.9384ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1496.6463ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1496.7391ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1483.3662ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1483.457ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1486.5727ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1486.6677ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 2149.5657ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 2149.6676ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 2187.2955ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 2187.4051ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1521.5319ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1521.6397ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 2298.0214ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 2298.1192ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 2314.3638ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 2314.4595ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1583.1495ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1583.2435ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 2035.9034ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 2035.9844ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 2151.2991ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 2151.4095ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1642.096ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1642.2149ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1876.4587ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1876.5516ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1661.2077ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1661.3059ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1236.3794ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1236.4641ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[100]
+      Start processing HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[100]
+      Sending HTTP request POST https://api.anthropic.com/v1/messages
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.ClientHandler[101]
+      Received HTTP response headers after 1595.4774ms - 200
+info: System.Net.Http.HttpClient.AnthropicModelInvoker.LogicalHandler[101]
+      End processing HTTP request after 1595.5904ms - 200

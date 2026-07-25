@@ -11,6 +11,17 @@ public interface ILlmGateway
     Task<LlmAnswerResponse> SendAnswerRequestAsync(PromptDefinition prompt, AnswerSynthesizerRequest request, CancellationToken cancellationToken);
 }
 
+public sealed class LlmGatewayException : Exception
+{
+    public LlmGatewayException(string message, ModelFailure? failure)
+        : base(message)
+    {
+        Failure = failure;
+    }
+
+    public ModelFailure? Failure { get; }
+}
+
 public sealed record LlmAnswerResponse(
     string Content,
     string Provider,
@@ -18,7 +29,8 @@ public sealed record LlmAnswerResponse(
     int TokensIn,
     int TokensOut,
     DateTimeOffset RequestedAt,
-    DateTimeOffset RespondedAt);
+    DateTimeOffset RespondedAt,
+    ProviderTelemetry Telemetry);
 
 public sealed class DeterministicLlmGateway : ILlmGateway
 {
@@ -59,7 +71,8 @@ public sealed class DeterministicLlmGateway : ILlmGateway
             result.Response.Usage.TokensIn,
             result.Response.Usage.TokensOut,
             result.Response.RequestedAt,
-            result.Response.RespondedAt);
+            result.Response.RespondedAt,
+            result.Response.Telemetry);
     }
 }
 
@@ -109,7 +122,16 @@ public sealed class DeterministicLlmPlannerGateway : ILlmPlannerGateway
                 false,
                 false,
                 FailureCategories.None,
-                null),
+                null,
+                null,
+                0,
+                0,
+                0,
+                Math.Max(1, question.Length / 4),
+                null,
+                false,
+                question.Length,
+                Math.Max(1, question.Length / 4)),
             new PersistedPlannerAttempt(
                 "planner",
                 "v2",
@@ -127,6 +149,15 @@ public sealed class DeterministicLlmPlannerGateway : ILlmPlannerGateway
                 false,
                 FailureCategories.None,
                 null,
+                null,
+                0,
+                0,
+                0,
+                Math.Max(1, question.Length / 4),
+                null,
+                false,
+                question.Length,
+                Math.Max(1, question.Length / 4),
                 null,
                 null,
                 JsonSerializer.Serialize(plan, _serializerOptions)),

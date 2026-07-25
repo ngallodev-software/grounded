@@ -201,7 +201,16 @@ public sealed class AnalyticsPhase1PlannerTests
             false,
             false,
             failureCategory,
-            failureMessage);
+            failureMessage,
+            HttpStatusCode: null,
+            RetryCount: 0,
+            QueueWaitMs: 0,
+            RetryDelayMs: 0,
+            EstimatedInputTokens: 0,
+            RetryAfterMs: null,
+            RateLimited: false,
+            RenderedPromptCharacters: 0,
+            RenderedPromptEstimatedTokens: 0);
 
     private static PersistedPlannerAttempt CreateAttempt(PlannerTrace trace, QueryPlan? queryPlan) =>
         new(
@@ -221,9 +230,18 @@ public sealed class AnalyticsPhase1PlannerTests
             trace.CacheHit,
             trace.FailureCategory,
             trace.FailureMessage,
-            null,
-            null,
-            queryPlan is null ? null : System.Text.Json.JsonSerializer.Serialize(queryPlan));
+            HttpStatusCode: trace.HttpStatusCode,
+            RetryCount: trace.RetryCount,
+            QueueWaitMs: trace.QueueWaitMs,
+            RetryDelayMs: trace.RetryDelayMs,
+            EstimatedInputTokens: trace.EstimatedInputTokens,
+            RetryAfterMs: trace.RetryAfterMs,
+            RateLimited: trace.RateLimited,
+            RenderedPromptCharacters: trace.RenderedPromptCharacters,
+            RenderedPromptEstimatedTokens: trace.RenderedPromptEstimatedTokens,
+            RawResponse: null,
+            RepairedResponse: null,
+            ParsedQueryPlanJson: queryPlan is null ? null : System.Text.Json.JsonSerializer.Serialize(queryPlan));
 
     private static QueryPlan CreatePlan(
         string questionType = "aggregate",
