@@ -2,7 +2,7 @@
 
 **Portfolio case study:** https://ngallodev-software.uk/projects/grounded
 
-## Quick summary
+## Summary
 
 - **What it is:** a natural-language analytics application where an LLM interprets intent but deterministic code controls database access.
 - **Flow:** question → typed `QueryPlan` → allowlist validation → parameterized SQL compiler → Postgres → grounded answer → evaluation.
