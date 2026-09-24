@@ -1,5 +1,7 @@
 # Grounded
 
+**Portfolio case study:** https://ngallodev-software.uk/projects/grounded
+
 Demo app: a guarded natural-language analytics interface on top of Postgres.
 
 The LLM produces a structured `QueryPlan` (intent). Everything downstream is application code: validation, SQL compilation, safety checks, execution, and answer synthesis.
