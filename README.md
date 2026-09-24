@@ -2,6 +2,13 @@
 
 **Portfolio case study:** https://ngallodev-software.uk/projects/grounded
 
+## Quick summary
+
+- **What it is:** a natural-language analytics application where an LLM interprets intent but deterministic code controls database access.
+- **Flow:** question → typed `QueryPlan` → allowlist validation → parameterized SQL compiler → Postgres → grounded answer → evaluation.
+- **Key safety boundary:** the LLM never writes SQL and never receives database execution authority.
+- **Why it matters:** model/provider changes can be evaluated while the security-critical execution path remains ordinary application code.
+
 Demo app: a guarded natural-language analytics interface on top of Postgres.
 
 The LLM produces a structured `QueryPlan` (intent). Everything downstream is application code: validation, SQL compilation, safety checks, execution, and answer synthesis.
