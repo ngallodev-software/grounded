@@ -1,8 +1,71 @@
 @import "tailwindcss";
 
+/*
+ * Grounded adopts the Work Atlas visual system without changing its application
+ * behavior. Existing Tailwind utilities intentionally keep their names; these
+ * token overrides remap the old zinc/amber dark palette onto the Atlas light/dark
+ * palette so every query, trace, SQL, and evaluation surface stays coherent.
+ */
 @layer base {
   :root {
+    color-scheme: light;
+
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --color-zinc-50: #0f1824;
+    --color-zinc-100: #172335;
+    --color-zinc-200: #223247;
+    --color-zinc-300: #334459;
+    --color-zinc-400: #46576a;
+    --color-zinc-500: #526174;
+    --color-zinc-600: #6d7988;
+    --color-zinc-700: #919ba6;
+    --color-zinc-800: #ccd2d8;
+    --color-zinc-900: #f0f2f3;
+    --color-zinc-950: #f9f8f5;
+
+    --color-amber-300: #4e88b9;
+    --color-amber-400: #2e6fa6;
+    --color-amber-500: #225e92;
+    --color-amber-600: #194b76;
+    --color-amber-800: #b8cfe1;
+    --color-amber-950: #e9f1f7;
+
+    --grounded-ink: #172335;
+    --grounded-muted: #526174;
+    --grounded-rule: #ccd2d8;
+    --grounded-wash: #f0f2f3;
+    --grounded-link: #225e92;
+  }
+
+  .dark {
     color-scheme: dark;
+
+    --color-zinc-50: #f7f7f3;
+    --color-zinc-100: #e8e9e6;
+    --color-zinc-200: #dde0df;
+    --color-zinc-300: #cbd1d7;
+    --color-zinc-400: #b0bac7;
+    --color-zinc-500: #9ba6b4;
+    --color-zinc-600: #7f8b99;
+    --color-zinc-700: #637080;
+    --color-zinc-800: #414b57;
+    --color-zinc-900: #222a34;
+    --color-zinc-950: #171c24;
+
+    --color-amber-300: #b9daf4;
+    --color-amber-400: #a9d1f2;
+    --color-amber-500: #9bc8ee;
+    --color-amber-600: #7aabd4;
+    --color-amber-800: #385b78;
+    --color-amber-950: #1c2b38;
+
+    --grounded-ink: #e8e9e6;
+    --grounded-muted: #b0bac7;
+    --grounded-rule: #414b57;
+    --grounded-wash: #222a34;
+    --grounded-link: #9bc8ee;
   }
 
   * {
@@ -18,14 +81,25 @@
   }
 
   body {
-    background-color: #09090b;
-    color: #f4f4f5;
-    font-family: 'DM Mono', monospace;
+    background-color: var(--color-zinc-950);
+    color: var(--grounded-ink);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Scrollbar styling */
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--grounded-link) 22%, transparent);
+    color: var(--grounded-ink);
+  }
+
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -36,11 +110,53 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #27272a;
+    background: var(--grounded-rule);
     border-radius: 0;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #3f3f46;
+    background: var(--grounded-muted);
+  }
+}
+
+@layer components {
+  .grounded-theme {
+    background: var(--color-zinc-950);
+    color: var(--grounded-ink);
+    font-family: var(--font-sans);
+  }
+
+  .grounded-theme :focus-visible {
+    outline: 2px solid var(--grounded-link);
+    outline-offset: 3px;
+  }
+
+  .grounded-theme code,
+  .grounded-theme pre,
+  .grounded-theme .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  .theme-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--grounded-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1;
+  }
+
+  .theme-select select {
+    min-height: 36px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 0 0.2rem;
+    cursor: pointer;
+  }
+
+  .theme-select select:focus {
+    outline: none;
   }
 }

@@ -195,7 +195,7 @@ export function AnswerPanel({ response, isLoading, onSelectQuestion }: AnswerPan
     <div className="flex flex-col h-full">
       {/* Answer summary */}
       <div className="p-6 border-b border-zinc-800/60">
-        <p className="text-zinc-200 text-sm leading-relaxed font-[Fraunces] text-base">
+        <p className="text-zinc-200 text-sm leading-relaxed font-sans text-base">
           {answer.summary}
         </p>
         {answer.keyPoints.length > 0 && (

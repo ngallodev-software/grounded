@@ -4,6 +4,7 @@ import { QueryInput } from '@/components/QueryInput'
 import { AnswerPanel } from '@/components/AnswerPanel'
 import { InternalsPanel } from '@/components/InternalsPanel'
 import { AuthGate } from '@/components/AuthGate'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { useAnalyticsQuery } from '@/hooks/useQuery'
 import type { QuerySuccessResponse, QueryErrorResponse } from '@/types/api'
 
@@ -51,13 +52,20 @@ export default function App() {
   )
 
   if (!unlocked) {
-    return <AuthGate onUnlock={unlock} />
+    return (
+      <div className="grounded-theme min-h-screen bg-zinc-950 text-zinc-100">
+        <div className="fixed right-5 top-4 z-50">
+          <ThemeToggle />
+        </div>
+        <AuthGate onUnlock={unlock} />
+      </div>
+    )
   }
 
   const response = data as QuerySuccessResponse | QueryErrorResponse | undefined
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="grounded-theme min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
       {/* Header */}
       <header className="border-b border-zinc-800/60 px-6 py-4 flex items-center justify-between shrink-0">
         <button
@@ -65,13 +73,14 @@ export default function App() {
           className="flex items-center gap-3 hover:opacity-70 transition-opacity"
           aria-label="Reset to home"
         >
-          <span className="text-zinc-100 font-[Fraunces] font-light text-lg tracking-tight">
+          <span className="text-zinc-100 font-sans font-semibold text-lg tracking-tight">
             Grounded
           </span>
           <span className="text-zinc-800 font-mono text-xs">·</span>
           <span className="text-zinc-600 font-mono text-xs">analytics</span>
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
           {lastQuestion && (
             <span className="text-[11px] font-mono text-zinc-700 max-w-[300px] truncate hidden sm:block">
               {lastQuestion}

@@ -9,7 +9,7 @@ export function AuthGate({ onUnlock }: AuthGateProps) {
     <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 px-6">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-[Fraunces] font-light text-zinc-100 tracking-tight">
+          <h1 className="text-2xl font-sans font-semibold text-zinc-100 tracking-tight">
             Grounded
           </h1>
           <p className="text-xs font-mono text-zinc-600">
