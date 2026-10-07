@@ -72,6 +72,7 @@ services:
     cap_add: [ NET_BIND_SERVICE, CHOWN, SETUID, SETGID, DAC_OVERRIDE ]
     security_opt: [ no-new-privileges:true ]
     volumes:
+      - ./googlef58ed423e39a1a62.html:/usr/share/nginx/html/googlef58ed423e39a1a62.html:ro
       - /etc/cloudflare/origin/ngallodev-software.uk.pem:/etc/nginx/certs/tls.crt:ro
       - /etc/cloudflare/origin/ngallodev-software.uk.key:/etc/nginx/certs/tls.key:ro
 
