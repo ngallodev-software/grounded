@@ -3,7 +3,7 @@
 This folder now contains the verified source-of-truth notes and Mermaid drafts that should be used to redraw diagrams.
 
 The prior diagram set in this folder was misleading and has been archived in:
-`docs/archive/diagrams/2026-03-23-legacy-diagrams.md`
+`docs/internal/archive/diagrams/2026-03-23-legacy-diagrams.md`
 
 Use these files instead:
 

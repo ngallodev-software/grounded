@@ -42,7 +42,7 @@ The app's own tables (`llm_traces`, `eval_runs`, `conversation_states`) are crea
 
 ## Seed data
 
-`scripts/seed.py` generates realistic e-commerce data matching the spec in `docs/phases/phase-1-artifact.md`:
+`scripts/seed.py` generates realistic e-commerce data matching the spec in `docs/internal/phases/phase-1-artifact.md`:
 
 - 3,000 customers
 - 180 products (15 premium, 12 inactive)

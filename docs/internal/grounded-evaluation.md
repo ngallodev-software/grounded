@@ -36,8 +36,8 @@ Evidence labeling:
 | 6. Backend / API Engineering | 3 | High | ASP.NET Core controller endpoints, DI composition, scoped execution services, and test-hosted API integration coverage are present. (`LlmIntegrationDemo.Api/Program.cs:3`, `LlmIntegrationDemo.Api/Controllers/AnalyticsController.cs:20`) |
 | 7. SQL / Structured Data Work | 3 | High | Strong evidence of structured SQL work: whitelist-driven plan validation, parameterized SQL compilation, read-only Postgres execution, and safety gating. (`LlmIntegrationDemo.Api/Services/QueryPlanCompiler.cs:15`, `LlmIntegrationDemo.Api/Services/AnalyticsQueryExecutor.cs:40`) |
 | 8. Performance / Cost / Latency | 2 | Medium | The repo tracks token counts and request timestamps on the LLM side and enforces query row caps + 15s DB timeouts, but deeper optimization is absent. (`LlmIntegrationDemo.Api/Services/LlmGateway.cs:41`, `LlmIntegrationDemo.Api/Services/AnalyticsQueryExecutor.cs:46`) |
-| 9. Documentation / Architecture | 3 | High | The project is unusually well-documented for a demo: spec, phased artifacts, remediation notes, and ADRs all align to the implementation direction. (`docs/project-spec.md:1`, `docs/phases/phase-4-spec.md:174`, `docs/adrs/adr-004-query-plan-pipeline-structure.md:1`) |
-| 10. Product Thinking / Ownership | 3 | High | Scope is sharply constrained, non-goals are explicit, and the Phase 4 remediation notes show iterative self-review rather than vague "AI demo" hand-waving. (`docs/project-spec.md:54`, `docs/phases/phase-4-spec.md:174`) |
+| 9. Documentation / Architecture | 3 | High | The project is unusually well-documented for a demo: spec, phased artifacts, remediation notes, and ADRs all align to the implementation direction. (`docs/internal/project-spec.md:1`, `docs/internal/phases/phase-4-spec.md:174`, `docs/adrs/adr-004-query-plan-pipeline-structure.md:1`) |
+| 10. Product Thinking / Ownership | 3 | High | Scope is sharply constrained, non-goals are explicit, and the Phase 4 remediation notes show iterative self-review rather than vague "AI demo" hand-waving. (`docs/internal/project-spec.md:54`, `docs/internal/phases/phase-4-spec.md:174`) |
 
 ## 3. Detailed Evidence by Category
 
@@ -108,14 +108,14 @@ Evidence labeling:
 
 ### 9) Documentation / Architecture
 - Evidence found:
-  - The top-level spec clearly defines scope, architecture, prompt strategy, data model, and evaluation philosophy. Direct evidence: `docs/project-spec.md:1`.
-  - Phase docs include a post-implementation review with concrete correction items, which is stronger than generic roadmap prose. Direct evidence: `docs/phases/phase-4-spec.md:174`.
+  - The top-level spec clearly defines scope, architecture, prompt strategy, data model, and evaluation philosophy. Direct evidence: `docs/internal/project-spec.md:1`.
+  - Phase docs include a post-implementation review with concrete correction items, which is stronger than generic roadmap prose. Direct evidence: `docs/internal/phases/phase-4-spec.md:174`.
   - ADR-004 explains the query pipeline split and tradeoffs. Direct evidence: `docs/adrs/adr-004-query-plan-pipeline-structure.md:11`.
 
 ### 10) Product Thinking / Ownership
 - Evidence found:
-  - MVP boundaries are explicit and defensible: fixed e-commerce domain, QueryPlan over raw SQL, no agent framework, no vector search, no general chat. Direct evidence: `docs/project-spec.md:54`, `docs/project-spec.md:74`.
-  - The repo shows self-critique and remediation planning, not just aspiration. Direct evidence: `docs/phases/phase-4-spec.md:178`.
+  - MVP boundaries are explicit and defensible: fixed e-commerce domain, QueryPlan over raw SQL, no agent framework, no vector search, no general chat. Direct evidence: `docs/internal/project-spec.md:54`, `docs/internal/project-spec.md:74`.
+  - The repo shows self-critique and remediation planning, not just aspiration. Direct evidence: `docs/internal/phases/phase-4-spec.md:178`.
 - Why it matters: this reads like someone deliberately shaping an interview-worthy system, not just assembling tools.
 
 ## 4. Strongest Signals For This Job

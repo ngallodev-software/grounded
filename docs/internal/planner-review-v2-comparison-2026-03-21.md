@@ -1,7 +1,7 @@
 # Planner Review V2 Comparison 2026-03-21
 
 Basis:
-- Original results are attached from the first planner review run in `docs/planner-review-2026-03-21.md`.
+- Original results are attached from the first planner review run in `docs/internal/planner-review-2026-03-21.md`.
 - New results below were run after integrating `planner/v2.md` and switching the active planner prompt to `v2`.
 - Current run target: `http://127.0.0.1:5252/analytics/query` against the rebuilt local API container.
 - Raw planner outputs for the new run were pulled from `llm_traces` by `trace_id`.

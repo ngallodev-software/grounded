@@ -398,7 +398,7 @@ docs/
   adrs/                          # Architecture decision records
   infrastructure/                # Postgres Docker spec
   screenshots/                   # UI screenshots
-  archive/                       # Finished implementation prompts and planning docs
+  internal/                      # Working notes kept for history (phases, planning, reviews)
 ```
 
 ---
