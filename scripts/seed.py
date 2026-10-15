@@ -8,7 +8,7 @@ Usage:
 Requires psycopg2:
     pip install psycopg2-binary
 
-Data spec (from docs/phases/phase-1-artifact.md):
+Data spec (from docs/internal/phases/phase-1-artifact.md):
   - 3,000 customers
   - 180 products
   - 36,000 orders  (90% Completed, 6% Cancelled, 4% Refunded)

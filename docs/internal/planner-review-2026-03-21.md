@@ -261,12 +261,12 @@ LIMIT 366
 
 ## Must-Have Artifacts
 
-- Current planner prompt: [prompts/planner/v1.md](../prompts/planner/v1.md)
-- Current structured-output JSON schema: [Grounded.Api/Services/QueryPlanSchema.cs](../Grounded.Api/Services/QueryPlanSchema.cs)
-- Current validator rules: [Grounded.Api/Services/QueryPlanValidator.cs](../Grounded.Api/Services/QueryPlanValidator.cs)
-- Repair-path logic: [Grounded.Api/Services/PlannerResponseRepairService.cs](../Grounded.Api/Services/PlannerResponseRepairService.cs)
-- Planner context / schema shown to planner: [Grounded.Api/Services/PlannerContextBuilder.cs](../Grounded.Api/Services/PlannerContextBuilder.cs)
-- Current schema/help panel shown to users: [grounded-ui/src/components/AnswerPanel.tsx](../grounded-ui/src/components/AnswerPanel.tsx)
+- Current planner prompt: [prompts/planner/v1.md](../../prompts/planner/v1.md)
+- Current structured-output JSON schema: [Grounded.Api/Services/QueryPlanSchema.cs](../../Grounded.Api/Services/QueryPlanSchema.cs)
+- Current validator rules: [Grounded.Api/Services/QueryPlanValidator.cs](../../Grounded.Api/Services/QueryPlanValidator.cs)
+- Repair-path logic: [Grounded.Api/Services/PlannerResponseRepairService.cs](../../Grounded.Api/Services/PlannerResponseRepairService.cs)
+- Planner context / schema shown to planner: [Grounded.Api/Services/PlannerContextBuilder.cs](../../Grounded.Api/Services/PlannerContextBuilder.cs)
+- Current schema/help panel shown to users: [grounded-ui/src/components/AnswerPanel.tsx](../../grounded-ui/src/components/AnswerPanel.tsx)
 
 Exact current UI help panel content:
 - Metrics: `revenue`, `units_sold`, `order_count`, `avg_order_value`
@@ -299,7 +299,7 @@ Current validator rules summary:
 
 ## Very Helpful Artifacts
 
-Representative benchmark questions from [eval/benchmark_cases.jsonl](../eval/benchmark_cases.jsonl):
+Representative benchmark questions from [eval/benchmark_cases.jsonl](../../eval/benchmark_cases.jsonl):
 - `What was total revenue last month?`
 - `How many completed orders did we have in the last 30 days?`
 - `What is average order value quarter to date?`
